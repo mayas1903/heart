@@ -7,63 +7,86 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      background: linear-gradient(to bottom right, #fdd9e3, #ffd0f0);
+      margin: 0;
+      background: linear-gradient(to bottom right, #fce4ec, #f8bbd0);
       font-family: sans-serif;
       text-align: center;
       padding: 20px;
     }
 
-    .hearts {
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .container {
       display: flex;
       justify-content: center;
-      gap: 30px;
-      margin-top: 40px;
+      gap: 40px;
+      margin-top: 30px;
     }
 
-    .heart-wrap {
+    .heart-wrapper {
       position: relative;
-      width: 120px;
-      height: 120px;
-      background: url('https://i.imgur.com/M4yYEt2.png') no-repeat center/contain;
+      width: 140px;
+      height: 140px;
+      clip-path: path('M70 130 Q100 100 120 80 Q140 50 110 30 Q90 20 70 40 Q50 20 30 30 Q0 50 20 80 Q40 100 70 130 Z');
+      background-color: #ffe6f0;
+      border: 2px solid #f06292;
+      overflow: hidden;
     }
 
-    .fill {
+    .liquid {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-      background: rgba(255, 105, 180, 0.7);
-      border-bottom-left-radius: 60px;
-      border-bottom-right-radius: 60px;
+      background: linear-gradient(to top, #f06292, #f8bbd0);
+      transition: height 0.6s ease;
       z-index: 1;
-      transition: height 0.5s ease;
+    }
+
+    .wave {
+      position: absolute;
+      width: 200%;
+      height: 100%;
+      background: url('https://i.imgur.com/zi6VtQp.png');
+      animation: wave 2s linear infinite;
+      bottom: 0;
+      left: -50%;
+      opacity: 0.2;
+    }
+
+    @keyframes wave {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(50%); }
     }
 
     .label {
-      font-weight: bold;
       margin-top: 10px;
+      font-weight: bold;
     }
 
     .drop {
       position: absolute;
       top: -20px;
       left: 50%;
-      transform: translateX(-50%);
       width: 20px;
       height: 20px;
-      background: rgba(255, 105, 180, 0.8);
+      background: #f06292;
       border-radius: 50%;
       animation: drop 0.6s ease forwards;
-      z-index: 2;
+      transform: translateX(-50%);
+      z-index: 3;
     }
 
     @keyframes drop {
       0% { top: -20px; opacity: 1; }
-      100% { top: 90px; opacity: 0; }
+      100% { top: 100px; opacity: 0; }
     }
 
     .btn {
-      background-color: #ff5c8d;
+      background-color: #f06292;
       color: white;
       border: none;
       padding: 15px 30px;
@@ -91,26 +114,30 @@
   </style>
 </head>
 <body>
-  <h1>💗 Любовный счётчик</h1>
+  <h1>💖 Любовный счётчик</h1>
 
-  <div class="hearts">
+  <div class="container">
     <div>
-      <div class="heart-wrap">
-        <div class="fill" id="partnerFill" style="height: 0%"></div>
+      <div class="heart-wrapper" id="partnerHeart">
+        <div class="liquid" id="partnerFill" style="height: 0%">
+          <div class="wave"></div>
+        </div>
       </div>
-      <div class="label">От партнёра<br><span id="fromPartner">—</span>/500</div>
+      <div class="label">От партнёра<br><span id="fromPartner">0</span>/500</div>
     </div>
     <div>
-      <div class="heart-wrap" id="myHeart">
-        <div class="fill" id="myFill" style="height: 0%"></div>
+      <div class="heart-wrapper" id="myHeart">
+        <div class="liquid" id="myFill" style="height: 0%">
+          <div class="wave"></div>
+        </div>
       </div>
-      <div class="label">От меня<br><span id="fromMe">—</span>/500</div>
+      <div class="label">От меня<br><span id="fromMe">0</span>/500</div>
     </div>
   </div>
 
   <button class="btn" onclick="sendLove()">💌 Скучаю по тебе</button>
 
-  <div class="gift" id="gift">🎁 Ты заполнил сердце! Подарок разблокирован!</div>
+  <div class="gift" id="gift">🎁 Ты заполнил своё сердце до 500! Подарок разблокирован!</div>
 
   <script>
     const API_URL = "https://serverheart.onrender.com";
@@ -124,7 +151,7 @@
     async function sendLove() {
       const res = await fetch(API_URL + "/send-love", { method: "POST" });
       const data = await res.json();
-      dropAnimation();
+      animateDrop();
       updateHearts(data);
     }
 
@@ -145,7 +172,7 @@
       }
     }
 
-    function dropAnimation() {
+    function animateDrop() {
       const drop = document.createElement("div");
       drop.classList.add("drop");
       document.getElementById("myHeart").appendChild(drop);
