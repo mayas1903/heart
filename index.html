@@ -1,458 +1,212 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Сердца</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+<head> 
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Огонечки</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    /* Фоновый градиент как на скриншоте */
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(to bottom, #ffe4f0 0%, #ffd1dc 100%);
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      margin: 0;
+    }
 
-        /* --- ОБЩИЕ СТИЛИ --- */
-        :root {
-            --bg-color: #FEEFF3;
-            --pink-accent: #FE2C55;
-            --glass-bg: rgba(255, 255, 255, 0.4);
-            --blur-effect: blur(10px);
-        }
+    .container {
+      max-width: 430px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 12px;
+    }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #000000;
-            color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        
-        /* --- ЭМУЛЯЦИЯ ЭКРАНА ТЕЛЕФОНА --- */
-        .phone-screen {
-            width: 100%;
-            height: 100%;
-            max-width: 414px;
-            max-height: 896px;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 10% 20%, rgba(255, 192, 203, 0.3), transparent 50%),
-                              radial-gradient(circle at 80% 30%, rgba(214, 188, 248, 0.3), transparent 50%);
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            border-radius: 40px;
-            overflow: hidden;
-            position: relative;
-        }
+    .ducks {
+      position: relative;
+      height: 45vh;
+    }
 
-        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-        .top-bar .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background-color: var(--glass-bg);
-            backdrop-filter: var(--blur-effect);
-            -webkit-backdrop-filter: var(--blur-effect);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-        .top-bar .user-info img { width: 24px; height: 24px; }
-        .top-bar .icon { font-size: 1.5em; color: #333; }
+    .user-block, .friend-block {
+      position: absolute;
+      background: rgba(255,255,255,0.8);
+      border-radius: 14px;
+      padding: 10px;
+      width: 120px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      z-index: 2;
+    }
+    .user-block { top: 16px; left: 16px; }
+    .friend-block { bottom: 16px; right: 16px; }
 
-        /* --- ОСНОВНОЙ КОНТЕНТ --- */
-        .app-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 80px 20px 100px 20px;
-            box-sizing: border-box;
-            position: relative;
-            overflow: hidden;
-        }
+    .block-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        .hearts-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 25px;
-            padding: 0 10px;
-        }
-        
-        .heart-unit {
-            position: relative;
-            width: 150px;
-            height: 150px;
-        }
+    .avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 6px;
+    }
 
-        .heart {
-            width: 130px;
-            height: 130px;
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            transform: rotate(-45deg);
-            background: var(--glass-bg);
-            backdrop-filter: var(--blur-effect);
-            -webkit-backdrop-filter: var(--blur-effect);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
+    .big-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff758c;
+      margin-top: 4px;
+    }
 
-        .heart::before, .heart::after {
-            content: '';
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            position: absolute;
-            background: inherit;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-        .heart::before { top: -65px; left: 0; }
-        .heart::after { top: 0; left: 65px; }
-        
-        .liquid-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 1;
-        }
+    /* Гифки огоньков */
+    .user-duck, .friend-duck {
+      position: absolute;
+      height: 210px;
+      z-index: 1;
+    }
+    .user-duck { top: 0; right: 0; }
+    .friend-duck { bottom: 0; left: 0; }
 
-        .liquid {
-            position: absolute;
-            bottom: 0;
-            left: -65px;
-            width: 260px;
-            height: 0%;
-            background: linear-gradient(to top, #FF5E78, #FF94A6);
-            border-radius: 45%;
-            transition: height 0.8s ease-in-out;
-            animation: wave 4s infinite linear;
-        }
-        
-        .heart-info {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(45deg);
-            z-index: 3;
-            text-align: center;
-            color: #000;
-        }
-        .heart-info .score { font-size: 2.8em; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .heart-info .name { font-size: 0.9em; margin-top: -5px; color: rgba(255,255,255,0.9); }
+    /* Кнопка как на скриншоте */
+    .btn {
+      width: 70%;
+      align-self: center;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+      border-radius: 28px;
+      box-shadow: 0 4px 10px rgba(255,117,140,0.3);
+      margin: 8px 0;
+    }
 
-        @keyframes wave {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    /* Прогресс-бар */
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 4px;
+    }
 
-        .action-button {
-            background-color: var(--pink-accent);
-            color: white;
-            border: none;
-            padding: 18px 35px;
-            border-radius: 30px;
-            font-family: 'Roboto', sans-serif;
-            font-size: 1.1em;
-            font-weight: 500;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(254, 44, 85, 0.4);
-            transition: transform 0.2s;
-            margin: 0 auto 25px auto;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .action-button:disabled {
-            background: #ccc;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-        
-        /* --- Лента событий --- */
-        .history-section {
-            flex-grow: 1;
-            background: #fff;
-            border-radius: 25px 25px 0 0;
-            padding: 20px;
-            margin: 0 -20px -100px -20px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-        }
-        .history-section h2 {
-            font-size: 1.1em;
-            color: #000;
-            text-align: left;
-            font-weight: 700;
-            margin: 0 0 15px 0;
-        }
-        #history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .history-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            background: #f7f7f7;
-            padding: 10px;
-            border-radius: 15px;
-        }
-        .history-item .icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #E6E7FA;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2em;
-            margin-right: 15px;
-        }
-        .history-item .actor { font-weight: 500; }
-        .history-item .time {
-            margin-left: auto;
-            color: #aaa;
-            font-size: 0.9em;
-        }
-        
-        /* --- Нижняя навигация --- */
-        .bottom-nav {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: var(--blur-effect);
-            -webkit-backdrop-filter: var(--blur-effect);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0 25px 0;
-            border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.8em;
-            color: #888;
-        }
-        .nav-item.active { color: #000; font-weight: 500; }
-        .nav-item .icon { font-size: 1.6em; }
+    /* История */
+    .history {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 60px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.8);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .history-item span { font-size: 14px; color: #333; }
+    .history-item img { width: 24px; height: 24px; }
 
-        /* --- Обнимашки --- */
-        .hugger {
-            width: 80px;
-            height: 60px;
-            background-color: #D6BCF8;
-            border-radius: 30px 30px 20px 20px;
-            position: absolute;
-            z-index: -1;
-            bottom: -15px;
-        }
-        .hugger.left { left: 0; }
-        .hugger.right { right: 0; }
-        .hugger .face {
-            position: absolute;
-            top: 22px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .hugger .eye { width: 5px; height: 5px; background-color: #333; border-radius: 50%; }
-        .hugger .smile { width: 10px; height: 5px; border-bottom: 2px solid #333; border-radius: 0 0 10px 10px; }
-
-    </style>
+    /* Нижний таб-бар */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -1px 8px rgba(0,0,0,0.1);
+    }
+    .tab-bar button {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      color: #888;
+    }
+    .tab-bar .active { color: #ff758c; }
+  </style>
 </head>
 <body>
-
-    <div class="phone-screen">
-        <header class="top-bar">
-            <span class="icon">‹</span>
-            <div class="user-info">
-                <img src="https://placehold.co/24x24/F9A825/FFFFFF?text=P" alt="User Avatar">
-                <span>Pepper</span>
-            </div>
-            <span class="icon">···</span>
-        </header>
-
-        <main class="app-content">
-            <div class="hearts-container">
-                <!-- Сердце партнера -->
-                <div class="heart-unit">
-                    <div class="hugger left"><div class="face"><div class="eye"></div><div class="eye"></div><div class="smile"></div></div></div>
-                    <div class="heart">
-                        <div class="liquid-container">
-                            <div class="liquid" id="partner-liquid"></div>
-                        </div>
-                        <div class="heart-info">
-                            <div class="score" id="partner-score">?</div>
-                            <div class="name" id="partner-name">от Pepper</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ваше сердце -->
-                <div class="heart-unit">
-                    <div class="hugger right"><div class="face"><div class="eye"></div><div class="eye"></div><div class="smile"></div></div></div>
-                    <div class="heart">
-                        <div class="liquid-container" id="my-liquid-container">
-                            <div class="liquid" id="my-liquid"></div>
-                        </div>
-                        <div class="heart-info">
-                            <div class="score" id="my-score">?</div>
-                            <div class="name">от Я</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="action-button" id="miss-you-button" disabled>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                Скучаю по тебе
-            </button>
-
-            <section class="history-section">
-                <h2>Сегодня</h2>
-                <ul id="history-list"></ul>
-            </section>
-        </main>
-
-        <nav class="bottom-nav">
-            <div class="nav-item active">
-                <span class="icon">❤️</span>
-                <span>Скучаю по тебе</span>
-            </div>
-            <div class="nav-item">
-                <span class="icon">💡</span>
-                <span>Виджеты</span>
-            </div>
-        </nav>
+  <div class="container">
+    <div class="ducks">
+      <div class="user-block">
+        <div class="block-content">
+          <img id="myAvatar" class="avatar" />
+          <h3 id="myName"></h3>
+          <p class="big-number" id="myCount">0 🔥</p>
+        </div>
+      </div>
+      <div class="friend-block">
+        <div class="block-content">
+          <img id="friendAvatar" class="avatar" />
+          <h3 id="friendName">Друг</h3>
+          <p class="big-number" id="friendCount">0 🔥</p>
+        </div>
+      </div>
+      <img src="myfire.gif" class="user-duck" />
+      <img src="friendfire.gif" class="friend-duck" />
     </div>
 
-    <script>
-        // === JavaScript для работы с REST API сервером ===
-        
-        // !!! ВАЖНО: Замените этот URL на URL вашего развернутого сервера !!!
-        const SERVER_URL = 'https://serverheart.onrender.com';
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 из 1000</div>
 
-        // --- Получаем элементы со страницы ---
-        const topBarUser = document.querySelector('.top-bar .user-info span');
-        const missYouButton = document.getElementById('miss-you-button');
-        const myScoreDisplay = document.getElementById('my-score');
-        const myLiquid = document.getElementById('my-liquid');
-        const myLiquidContainer = document.getElementById('my-liquid-container');
-        const partnerScoreDisplay = document.getElementById('partner-score');
-        const partnerLiquid = document.getElementById('partner-liquid');
-        const partnerNameDisplay = document.getElementById('partner-name');
-        const historyList = document.getElementById('history-list');
+    <button class="btn" id="loveBtn">❤️ Скучаю по тебе</button>
 
-        let myRole = null;
+    <div class="history" id="history"></div>
+  </div>
 
-        // --- Функции для работы с API ---
-        async function joinGame() {
-            try {
-                const response = await fetch(`${SERVER_URL}/join`);
-                const data = await response.json();
-                myRole = data.role;
-                console.log(`Вы присоединились как: ${myRole}`);
-                updateUI(data.state);
-                missYouButton.disabled = false;
-            } catch (error) {
-                console.error('Не удалось присоединиться:', error);
-                topBarUser.innerText = 'Ошибка';
-            }
-        }
-        
-        async function fetchState() {
-            try {
-                const response = await fetch(`${SERVER_URL}/state`);
-                const state = await response.json();
-                updateUI(state);
-            } catch (error) {
-                console.error('Не удалось получить состояние:', error);
-            }
-        }
+  <!-- Нижний таб-бар -->
+  <div class="tab-bar">
+    <button class="active">
+      <img src="icon-heart.svg" alt="Скучаю" width="24" height="24" />
+      <span>Скучаю</span>
+    </button>
+    <button>
+      <img src="icon-widgets.svg" alt="Виджеты" width="24" height="24" />
+      <span>Виджеты</span>
+    </button>
+    <button>
+      <img id="tabAvatar" class="avatar" src="" alt="Профиль" />
+      <span>Я</span>
+    </button>
+  </div>
 
-        async function sendLove() {
-            if (!myRole || myRole === 'spectator') return;
-            try {
-                const response = await fetch(`${SERVER_URL}/send-love`, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ role: myRole })
-                });
-                const data = await response.json();
-                updateUI(data.state);
-            } catch (error) {
-                console.error('Не удалось отправить данные:', error);
-            }
-        }
+  <script>
+    // Регистрация обработчиков
+    function sendLove(times = 1) {
+      // Ваша логика отправки «огоньков»
+    }
 
-        // --- Обновление интерфейса ---
-        function updateUI(state) {
-            if (!state) return;
-
-            const meIsA = myRole === 'userA';
-            const myScore = meIsA ? state.scores.userA : state.scores.userB;
-            const partnerScore = meIsA ? state.scores.userB : state.scores.userA;
-            
-            myScoreDisplay.innerText = myScore;
-            myLiquid.style.height = Math.min(myScore, 100) + '%';
-            
-            partnerScoreDisplay.innerText = partnerScore;
-            partnerLiquid.style.height = Math.min(partnerScore, 100) + '%';
-            
-            historyList.innerHTML = '';
-            state.history.forEach(item => {
-                addHistoryItem(item.actor, item.time);
-            });
-
-            const partnerName = meIsA ? 'User B' : 'User A'; // Placeholder
-            topBarUser.innerText = state.users[meIsA ? 'userB' : 'userA'] ? 'Pepper' : 'Ожидание...';
-            partnerNameDisplay.innerText = `от ${topBarUser.innerText}`;
-        }
-
-        // --- Инициализация ---
-        document.addEventListener('DOMContentLoaded', () => {
-            joinGame();
-            setInterval(fetchState, 3000);
-            missYouButton.addEventListener('click', () => {
-                sendLove();
-            });
-        });
-        
-        function addHistoryItem(actor, time) {
-            const li = document.createElement('li');
-            li.classList.add('history-item');
-            // Определяем, кто "Я" в зависимости от роли
-            const actorDisplay = (myRole === 'userA' && actor === 'Pumpkin') || (myRole === 'userB' && actor === 'Me') ? 'Я' : actor;
-            li.innerHTML = `
-                <span class="icon">😊</span>
-                <span class="actor">${actorDisplay}</span>
-                <span class="time">${time}</span>
-            `;
-            historyList.appendChild(li);
-        }
-    </script>
+    document.getElementById('loveBtn').addEventListener('click', () => sendLove());
+    document.getElementById('tabAvatar').src = document.getElementById('myAvatar').src;
+  </script>
 </body>
 </html>
