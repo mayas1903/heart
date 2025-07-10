@@ -38,20 +38,20 @@
     <div class="ducks">
       <div class="user-block">
         <div class="block-content">
-          <img id="myAvatar" class="avatar" alt="Мой аватар">
+          <img id="myAvatar" class="avatar" alt="Мой аватар" src="avatar-placeholder.png">
           <h3 id="myName"></h3>
           <p class="big-number" id="myCount">0 🔥</p>
         </div>
       </div>
       <div class="friend-block">
         <div class="block-content">
-          <img id="friendAvatar" class="avatar" alt="Аватар друга">
+          <img id="friendAvatar" class="avatar" alt="Аватар друга" src="avatar-placeholder.png">
           <h3 id="friendName">Друг</h3>
           <p class="big-number" id="friendCount">0 🔥</p>
         </div>
       </div>
-      <img id="userDuck" class="user-duck" alt="Огонечек я">
-      <img id="friendDuck" class="friend-duck" alt="Огонечек друг">
+      <img id="userDuck" class="user-duck" alt="Огонечек я" src="myfire.gif">
+      <img id="friendDuck" class="friend-duck" alt="Огонечек друг" src="friendfire.gif">
     </div>
     <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
     <div class="progress-text" id="progressText">0 из 0</div>
@@ -59,46 +59,69 @@
     <div class="history" id="history"></div>
   </div>
   <script>
-    const BASE = 'https://serverheart.onrender.com';
-    Telegram.WebApp.ready(); Telegram.WebApp.expand();
-    const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
+    // WebSocket синхронизация
+    const socket = new WebSocket('wss://serverheart.onrender.com');
     let role = null;
-    const myInfo = { id: tgUser.id, name: tgUser.first_name||'Я', avatar: tgUser.photo_url||BASE+'/avatar-placeholder.png' };
-    // elements
-    const el = id=>document.getElementById(id);
-    const avatarEl=el('myAvatar'), nameEl=el('myName'), countEl=el('myCount'), friendAvatarEl=el('friendAvatar'), friendCountEl=el('friendCount'), fillEl=el('progressFill'), textEl=el('progressText'), histEl=el('history'), userDuckEl=el('userDuck'), friendDuckEl=el('friendDuck');
-    // set avatars & static images
-    avatarEl.src=myInfo.avatar; nameEl.textContent=myInfo.name;
-    friendAvatarEl.src=BASE+'/avatar-placeholder.png';
-    userDuckEl.src=BASE+'/myfire.gif'; friendDuckEl.src=BASE+'/friendfire.gif';
-    // setup socket
-    const socket=new WebSocket(BASE.replace(/^http/, 'ws'));
-    socket.onopen=()=>socket.send(JSON.stringify({type:'join',user:myInfo}));
-    socket.onmessage=ev=>{
-      const msg=JSON.parse(ev.data);
-      if(msg.type==='join'){
-        role=msg.role;
+    socket.onopen = () => socket.send(JSON.stringify({ type: 'join' }));
+    socket.onmessage = ({ data }) => {
+      const msg = JSON.parse(data);
+      if (msg.type === 'join') {
+        role = msg.role;
         update(msg.state);
-      } else if(msg.type==='update'){
+      } else if (msg.type === 'update') {
         update(msg.payload);
-      } else if(msg.type==='resetDone'){
-        update({scores:{userA:0,userB:0},history:[],users:{}});
+      } else if (msg.type === 'resetDone') {
+        update({ scores: { userA: 0, userB: 0 }, history: [] });
         alert('Прогресс обнулён');
       }
     };
-    function update(state){
-      const meCount=role==='userA'?state.scores.userA:state.scores.userB;
-      const frCount=role==='userA'?state.scores.userB:state.scores.userA;
-      const total=state.scores.userA+state.scores.userB;
-      countEl.textContent=`${meCount} 🔥`;
-      friendCountEl.textContent=`${frCount} 🔥`;
-      fillEl.style.width=`${(total/Math.min((Math.floor(total/1000)+1)*1000,10000))*100}%`;
-      textEl.textContent=`${total} из ${Math.min((Math.floor(total/1000)+1)*1000,10000)}`;
-      renderHistory(state.history||[]);
+
+    // DOM элементы
+    const el = id => document.getElementById(id);
+    const countEl = el('myCount'), friendCountEl = el('friendCount'), fillEl = el('progressFill'), textEl = el('progressText'), histEl = el('history');
+
+    function update(state) {
+      const meCount = role === 'userA' ? state.scores.userA : state.scores.userB;
+      const frCount = role === 'userA' ? state.scores.userB : state.scores.userA;
+      const total = state.scores.userA + state.scores.userB;
+      countEl.textContent = `${meCount} 🔥`;
+      friendCountEl.textContent = `${frCount} 🔥`;
+      const max = Math.min((Math.floor(total/1000)+1)*1000, 10000);
+      fillEl.style.width = `${(total/max)*100}%`;
+      textEl.textContent = `${total} из ${max}`;
+      renderHistory(state.history || []);
     }
-    function renderHistory(arr){histEl.innerHTML='';arr.forEach(({actor,time})=>{const div=document.createElement('div');div.className='history-item';const img=document.createElement('img'),span=document.createElement('span');img.src=actor==='userA'?BASE+'/myfire.gif':BASE+'/friendfire.gif';span.textContent=`${time} ${actor}`;div.append(img,span);histEl.append(div);});}
-    function flyEmoji(){const btn=el('loveBtn'),r=btn.getBoundingClientRect(),d=document.createElement('div');d.className='duck-animation';d.textContent='🔥';d.style.left=`${r.left+r.width/2-16}px`;d.style.top=`${r.top+r.height/2-16}px`;document.body.append(d);const x=(Math.random()*200-100).toFixed()+'px',y=(-Math.random()*200-50).toFixed()+'px';d.style.setProperty('--x',x);d.style.setProperty('--y',y);d.onanimationend=()=>d.remove();}
-    el('loveBtn').onclick=()=>{socket.send(JSON.stringify({type:'click',role}));flyEmoji();};
+
+    function renderHistory(arr) {
+      histEl.innerHTML = '';
+      arr.forEach(({ actor, time }) => {
+        const div = document.createElement('div'); div.className = 'history-item';
+        const img = document.createElement('img');
+        img.src = actor === 'userA' ? 'myfire.gif' : 'friendfire.gif';
+        const span = document.createElement('span'); span.textContent = `${time} ${actor}`;
+        div.append(img, span);
+        histEl.append(div);
+      });
+    }
+
+    function flyEmoji() {
+      const btn = el('loveBtn');
+      const r = btn.getBoundingClientRect();
+      const d = document.createElement('div'); d.className = 'duck-animation'; d.textContent = '🔥';
+      d.style.left = `${r.left + r.width/2 - 16}px`;
+      d.style.top = `${r.top + r.height/2 - 16}px`;
+      document.body.append(d);
+      const x = (Math.random()*200 - 100).toFixed() + 'px';
+      const y = (-Math.random()*200 - 50).toFixed() + 'px';
+      d.style.setProperty('--x', x);
+      d.style.setProperty('--y', y);
+      d.onanimationend = () => d.remove();
+    }
+
+    el('loveBtn').onclick = () => {
+      socket.send(JSON.stringify({ type: 'click', role }));
+      flyEmoji();
+    };
   </script>
 </body>
 </html>
