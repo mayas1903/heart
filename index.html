@@ -1,186 +1,174 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Любовный счётчик</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      margin: 0;
-      background: linear-gradient(to bottom right, #fce4ec, #f8bbd0);
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple App</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap');
 
-    h1 {
-      font-size: 26px;
-      margin-bottom: 20px;
-    }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #232227; /* Темный фон */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
 
-    .container {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-top: 30px;
-    }
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            max-height: 800px;
+            background-color: #FDF1F7; /* Основной фон приложения */
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            box-sizing: border-box;
+        }
 
-    .heart-wrapper {
-      position: relative;
-      width: 140px;
-      height: 140px;
-      clip-path: path('M70 130 Q100 100 120 80 Q140 50 110 30 Q90 20 70 40 Q50 20 30 30 Q0 50 20 80 Q40 100 70 130 Z');
-      background-color: #ffe6f0;
-      border: 2px solid #f06292;
-      overflow: hidden;
-    }
+        .counters {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
-    .liquid {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: linear-gradient(to top, #f06292, #f8bbd0);
-      transition: height 0.6s ease;
-      z-index: 1;
-    }
+        .profile-card {
+            width: 48%;
+            height: 150px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            padding-top: 30px;
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        /* Фиолетовое сердце */
+        .profile-card.pumpkin {
+            background: linear-gradient(145deg, #A463F2, #8B44D3);
+        }
+        
+        /* Розовое сердце */
+        .profile-card.me {
+            background: linear-gradient(145deg, #FF84B1, #E85A90);
+        }
 
-    .wave {
-      position: absolute;
-      width: 200%;
-      height: 100%;
-      background: url('https://i.imgur.com/zi6VtQp.png');
-      animation: wave 2s linear infinite;
-      bottom: 0;
-      left: -50%;
-      opacity: 0.2;
-    }
+        .profile-card .score {
+            font-size: 3em;
+            font-weight: 800;
+        }
 
-    @keyframes wave {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(50%); }
-    }
+        .profile-card .user-name {
+            font-size: 0.9em;
+        }
 
-    .label {
-      margin-top: 10px;
-      font-weight: bold;
-    }
+        .action-button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
 
-    .drop {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background: #f06292;
-      border-radius: 50%;
-      animation: drop 0.6s ease forwards;
-      transform: translateX(-50%);
-      z-index: 3;
-    }
+        .action-button {
+            background: linear-gradient(to right, #FF717D, #FF5068);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 90, 112, 0.4);
+        }
 
-    @keyframes drop {
-      0% { top: -20px; opacity: 1; }
-      100% { top: 100px; opacity: 0; }
-    }
+        .history {
+            flex-grow: 1;
+            background-color: white;
+            color: black;
+            border-radius: 20px;
+            padding: 20px;
+            overflow-y: auto;
+        }
 
-    .btn {
-      background-color: #f06292;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 16px;
-      margin-top: 40px;
-      border-radius: 30px;
-      cursor: pointer;
-    }
+        .history h2 {
+            font-size: 1em;
+            color: #777;
+            margin: 0 0 15px 0;
+        }
 
-    .gift {
-      margin-top: 20px;
-      font-size: 20px;
-      display: none;
-    }
+        .history-item {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .history-item .icon {
+            font-size: 1.5em;
+            margin-right: 15px;
+            background-color: #FFF4D9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .gift.show {
-      display: block;
-      animation: fadeIn 1s ease-in;
-    }
+        .history-item .actor {
+            font-weight: 700;
+        }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
-</head>
+        .history-item .time {
+            margin-left: auto;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+    </style>
+    </head>
+
 <body>
-  <h1>💖 Любовный счётчик</h1>
 
-  <div class="container">
-    <div>
-      <div class="heart-wrapper" id="partnerHeart">
-        <div class="liquid" id="partnerFill" style="height: 0%">
-          <div class="wave"></div>
+    <div class="app-container">
+        <div class="counters">
+            <div class="profile-card pumpkin">
+                <div class="score">511</div>
+                <div class="user-name">От Pumpkin</div>
+            </div>
+            <div class="profile-card me">
+                <div class="score">97</div>
+                <div class="user-name">От меня</div>
+            </div>
         </div>
-      </div>
-      <div class="label">От партнёра<br><span id="fromPartner">0</span>/500</div>
-    </div>
-    <div>
-      <div class="heart-wrapper" id="myHeart">
-        <div class="liquid" id="myFill" style="height: 0%">
-          <div class="wave"></div>
+
+        <div class="action-button-container">
+            <button class="action-button">❤️ Скучаю по тебе</button>
         </div>
-      </div>
-      <div class="label">От меня<br><span id="fromMe">0</span>/500</div>
+
+        <div class="history">
+            <h2>Сегодня</h2>
+            <div class="history-item">
+                <span class="icon">😊</span>
+                <span class="actor">Я</span>
+                <span class="time">23:41</span>
+            </div>
+            <div class="history-item">
+                <span class="icon">😊</span>
+                <span class="actor">Я</span>
+                <span class="time">23:38</span>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <button class="btn" onclick="sendLove()">💌 Скучаю по тебе</button>
-
-  <div class="gift" id="gift">🎁 Ты заполнил своё сердце до 500! Подарок разблокирован!</div>
-
-  <script>
-    const API_URL = "https://serverheart.onrender.com";
-
-    async function loadCounts() {
-      const res = await fetch(API_URL + "/counter");
-      const data = await res.json();
-      updateHearts(data);
-    }
-
-    async function sendLove() {
-      const res = await fetch(API_URL + "/send-love", { method: "POST" });
-      const data = await res.json();
-      animateDrop();
-      updateHearts(data);
-    }
-
-    function updateHearts(data) {
-      const fromMe = Math.min(data.fromMe, 500);
-      const fromPartner = Math.min(data.fromPartner, 500);
-      const percentMe = (fromMe / 500) * 100;
-      const percentPartner = (fromPartner / 500) * 100;
-
-      document.getElementById("fromMe").innerText = fromMe;
-      document.getElementById("fromPartner").innerText = fromPartner;
-
-      document.getElementById("myFill").style.height = percentMe + "%";
-      document.getElementById("partnerFill").style.height = percentPartner + "%";
-
-      if (fromMe >= 500) {
-        document.getElementById("gift").classList.add("show");
-      }
-    }
-
-    function animateDrop() {
-      const drop = document.createElement("div");
-      drop.classList.add("drop");
-      document.getElementById("myHeart").appendChild(drop);
-      setTimeout(() => drop.remove(), 600);
-    }
-
-    Telegram.WebApp.ready();
-    loadCounts();
-  </script>
 </body>
 </html>
