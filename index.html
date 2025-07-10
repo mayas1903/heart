@@ -50,8 +50,9 @@
           <p class="big-number" id="friendCount">0 🔥</p>
         </div>
       </div>
-      <img id="userDuck" class="user-duck" alt="Огонечек я" src="myfire.gif">
-      <img id="friendDuck" class="friend-duck" alt="Огонечек друг" src="friendfire.gif">
+      <!-- Используем реальные имена файлов GIF -->
+      <img id="userDuck" class="user-duck" alt="Огонечек я" src="mygif.gif">
+      <img id="friendDuck" class="friend-duck" alt="Огонечек друг" src="friendgif.gif">
     </div>
     <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
     <div class="progress-text" id="progressText">0 из 0</div>
@@ -97,7 +98,7 @@
       arr.forEach(({ actor, time }) => {
         const div = document.createElement('div'); div.className = 'history-item';
         const img = document.createElement('img');
-        img.src = actor === 'userA' ? 'myfire.gif' : 'friendfire.gif';
+        img.src = actor === 'userA' ? 'mygif.gif' : 'friendgif.gif';
         const span = document.createElement('span'); span.textContent = `${time} ${actor}`;
         div.append(img, span);
         histEl.append(div);
@@ -125,3 +126,4 @@
   </script>
 </body>
 </html>
+
