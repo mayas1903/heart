@@ -1,74 +1,36 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>Огонечки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    html, body {
-      width: 100%; height: 100%; margin: 0;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(to bottom, #ffe4f0 0%, #ffd1dc 100%);
+    html, body {margin:0; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); width:100%; height:100%; overflow:hidden;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(to bottom,#ffe4f0,#ffd1dc);
     }
-    .container { max-width: 430px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding: 12px; }
-    .ducks { position: relative; height: 45vh; }
-    .user-block, .friend-block {
-      position: absolute; background: rgba(255,255,255,0.8); border-radius: 14px;
-      padding: 10px; width: 120px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      text-align: center; z-index: 2;
+    .container {max-width:430px; margin:0 auto; display:flex; flex-direction:column; gap:16px; padding:12px; height:100%; box-sizing:border-box;}
+    .ducks {position:relative; flex:1;}
+    .user-block, .friend-block {position:absolute; background:rgba(255,255,255,0.8); border-radius:14px; padding:10px; width:120px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.08); z-index:2;}
+    .user-block {top:16px; left:16px;} .friend-block {bottom:16px; right:16px;}
+    .block-content {display:flex; flex-direction:column; align-items:center;}
+    .avatar {width:58px; height:58px; border-radius:50%; object-fit:cover; margin-bottom:6px;}
+    .big-number {font-size:24px; font-weight:bold; color:#ff758c; margin-top:4px;}
+    .user-duck, .friend-duck {position:absolute; height:210px; z-index:1;}
+    .user-duck {top:0; right:0;} .friend-duck {bottom:0; left:0;}
+    .btn {width:70%; align-self:center; padding:14px; font-size:16px; font-weight:bold; color:#fff; border:none;
+      background:linear-gradient(90deg,#ff758c,#ff7eb3); border-radius:28px; box-shadow:0 4px 10px rgba(255,117,140,0.3);
     }
-    .user-block { top: 16px; left: 16px; }
-    .friend-block { bottom: 16px; right: 16px; }
-    .block-content { display: flex; flex-direction: column; align-items: center; }
-    .avatar { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; margin-bottom: 6px; }
-    .big-number { font-size: 24px; font-weight: bold; color: #ff758c; margin-top: 4px; }
-    .user-duck, .friend-duck { position: absolute; height: 210px; z-index: 1; }
-    .user-duck { top: 0; right: 0; }
-    .friend-duck { bottom: 0; left: 0; }
-    .btn {
-      width: 70%; align-self: center; padding: 14px;
-      font-size: 16px; font-weight: bold; color: #fff; border: none;
-      background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
-      border-radius: 28px; box-shadow: 0 4px 10px rgba(255,117,140,0.3);
-      margin: 8px 0;
-    }
-    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.5); border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; transition: width 0.3s ease; background: linear-gradient(90deg, #ff758c, #ff7eb3); }
-    .progress-text { text-align: center; font-size: 14px; color: #555; margin-bottom: 4px; }
-    .history { flex: 1; overflow-y: auto; margin-bottom: 60px; }
-    .history-item {
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(255,255,255,0.8); border-radius: 14px;
-      padding: 10px 14px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .history-item span { font-size: 14px; color: #333; }
-    .history-item img { width: 24px; height: 24px; }
-    .tab-bar {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-      background: #fff; display: flex; justify-content: space-around; align-items: center;
-      box-shadow: 0 -1px 8px rgba(0,0,0,0.1);
-    }
-    .tab-bar button {
-      background: none; border: none; display: flex;
-      flex-direction: column; align-items: center; font-size: 12px; color: #888;
-    }
-    .tab-bar .active { color: #ff758c; }
-
-    /* Анимация смайлика */
-    .duck-animation {
-      position: absolute;
-      font-size: 32px;
-      animation: fly 1.8s ease-out forwards;
-      pointer-events: none;
-      z-index: 1000;
-    }
-    @keyframes fly {
-      0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
-      100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(180deg); }
-    }
+    .progress-bar {width:100%; height:8px; background:rgba(255,255,255,0.5); border-radius:4px; overflow:hidden;}
+    .progress-fill {height:100%; width:0; transition:width .3s ease; background:linear-gradient(90deg,#ff758c,#ff7eb3);}
+    .progress-text {text-align:center; font-size:14px; color:#555; margin-bottom:4px;}
+    .history {flex:1; overflow-y:auto; margin-bottom:60px;}
+    .history-item {display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.8); border-radius:14px; padding:10px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+    .history-item span {font-size:14px; color:#333;}
+    .history-item img {width:24px; height:24px;}
+    .duck-animation {position:absolute; font-size:32px; animation:fly 1.8s ease-out forwards; pointer-events:none; z-index:1000;}
+    @keyframes fly {0%{opacity:1;transform:translate(0,0)rotate(0deg);}100%{opacity:0;transform:translate(var(--x),var(--y))rotate(180deg);}}
   </style>
 </head>
 <body>
@@ -76,124 +38,67 @@
     <div class="ducks">
       <div class="user-block">
         <div class="block-content">
-          <img id="myAvatar" class="avatar" src="" alt="Мой аватар" />
+          <img id="myAvatar" class="avatar" alt="Мой аватар">
           <h3 id="myName"></h3>
           <p class="big-number" id="myCount">0 🔥</p>
         </div>
       </div>
       <div class="friend-block">
         <div class="block-content">
-          <img id="friendAvatar" class="avatar" src="" alt="Аватар друга" />
+          <img id="friendAvatar" class="avatar" alt="Аватар друга">
           <h3 id="friendName">Друг</h3>
           <p class="big-number" id="friendCount">0 🔥</p>
         </div>
       </div>
-      <img id="userDuck" src="" class="user-duck" alt="Огонечек я" />
-      <img id="friendDuck" src="" class="friend-duck" alt="Огонечек друг" />
+      <img id="userDuck" class="user-duck" alt="Огонечек я">
+      <img id="friendDuck" class="friend-duck" alt="Огонечек друг">
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text" id="progressText">0 из 1000</div>
+    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    <div class="progress-text" id="progressText">0 из 0</div>
     <button class="btn" id="loveBtn">❤️ Скучаю по тебе</button>
     <div class="history" id="history"></div>
-  </div>
-  <div class="tab-bar">
-    <button class="active">
-      <img src="" id="iconHeart" alt="Скучаю" width="24" height="24" />
-      <span>Скучаю</span>
-    </button>
-    <button>
-      <img src="" id="iconWidgets" alt="Виджеты" width="24" height="24" />
-      <span>Виджеты</span>
-    </button>
-    <button>
-      <img id="tabAvatar" class="avatar" src="" alt="Профиль" />
-      <span>Я</span>
-    </button>
   </div>
   <script>
     const BASE = 'https://serverheart.onrender.com';
     Telegram.WebApp.ready(); Telegram.WebApp.expand();
     const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myInfo = { id: tgUser.id, name: tgUser.first_name || 'Я', avatar: tgUser.photo_url || BASE + '/avatar-placeholder.png' };
-    const avatarEl = document.getElementById('myAvatar');
-    const nameEl = document.getElementById('myName');
-    const countEl = document.getElementById('myCount');
-    const friendAvatarEl = document.getElementById('friendAvatar');
-    const friendCountEl = document.getElementById('friendCount');
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const historyEl = document.getElementById('history');
-    const userDuckEl = document.getElementById('userDuck');
-    const friendDuckEl = document.getElementById('friendDuck');
-    const iconHeartEl = document.getElementById('iconHeart');
-    const iconWidgetsEl = document.getElementById('iconWidgets');
-    const tabAvatarEl = document.getElementById('tabAvatar');
-
-    avatarEl.src = myInfo.avatar;
-    nameEl.textContent = myInfo.name;
-    friendAvatarEl.src = BASE + '/avatar-placeholder.png';
-    userDuckEl.src = BASE + '/myfire.gif';
-    friendDuckEl.src = BASE + '/friendfire.gif';
-    iconHeartEl.src = BASE + '/icon-heart.svg';
-    iconWidgetsEl.src = BASE + '/icon-widgets.svg';
-    tabAvatarEl.src = myInfo.avatar;
-
-    let state = { total: 0, me: { count: 0 }, friend: { count: 0 }};
-
-    const socket = new WebSocket('wss://apple-adhesive-ticket.glitch.me');
-    socket.onopen = () => socket.send(JSON.stringify({ type: 'auth', user: myInfo }));
-    socket.onmessage = ({ data }) => {
-      const msg = JSON.parse(data);
-      if (msg.type === 'update') {
-        state = msg.payload;
-        updateUI(); renderHistory(msg.payload.history || []);
+    let role = null;
+    const myInfo = { id: tgUser.id, name: tgUser.first_name||'Я', avatar: tgUser.photo_url||BASE+'/avatar-placeholder.png' };
+    // elements
+    const el = id=>document.getElementById(id);
+    const avatarEl=el('myAvatar'), nameEl=el('myName'), countEl=el('myCount'), friendAvatarEl=el('friendAvatar'), friendCountEl=el('friendCount'), fillEl=el('progressFill'), textEl=el('progressText'), histEl=el('history'), userDuckEl=el('userDuck'), friendDuckEl=el('friendDuck');
+    // set avatars & static images
+    avatarEl.src=myInfo.avatar; nameEl.textContent=myInfo.name;
+    friendAvatarEl.src=BASE+'/avatar-placeholder.png';
+    userDuckEl.src=BASE+'/myfire.gif'; friendDuckEl.src=BASE+'/friendfire.gif';
+    // setup socket
+    const socket=new WebSocket(BASE.replace(/^http/, 'ws'));
+    socket.onopen=()=>socket.send(JSON.stringify({type:'join',user:myInfo}));
+    socket.onmessage=ev=>{
+      const msg=JSON.parse(ev.data);
+      if(msg.type==='join'){
+        role=msg.role;
+        update(msg.state);
+      } else if(msg.type==='update'){
+        update(msg.payload);
+      } else if(msg.type==='resetDone'){
+        update({scores:{userA:0,userB:0},history:[],users:{}});
+        alert('Прогресс обнулён');
       }
-      if (msg.type === 'plane' && msg.from !== myInfo.id) createDuckAnimation();
-      if (msg.type === 'resetDone') alert('Прогресс обнулён');
     };
-
-    function updateUI() {
-      countEl.textContent = `${state.me.count} 🔥`;
-      friendCountEl.textContent = `${state.friend.count} 🔥`;
-      const lvl = Math.floor(state.total / 1000) + 1;
-      const max = Math.min(lvl * 1000, 10000);
-      const pct = Math.min((state.total / max) * 100, 100);
-      progressFill.style.width = `${pct}%`;
-      progressText.textContent = `${state.total} из ${max}`;
+    function update(state){
+      const meCount=role==='userA'?state.scores.userA:state.scores.userB;
+      const frCount=role==='userA'?state.scores.userB:state.scores.userA;
+      const total=state.scores.userA+state.scores.userB;
+      countEl.textContent=`${meCount} 🔥`;
+      friendCountEl.textContent=`${frCount} 🔥`;
+      fillEl.style.width=`${(total/Math.min((Math.floor(total/1000)+1)*1000,10000))*100}%`;
+      textEl.textContent=`${total} из ${Math.min((Math.floor(total/1000)+1)*1000,10000)}`;
+      renderHistory(state.history||[]);
     }
-
-    function renderHistory(arr) {
-      historyEl.innerHTML = '';
-      arr.forEach(({ actor, time }) => {
-        const item = document.createElement('div'); item.className = 'history-item';
-        const img = document.createElement('img');
-        img.src = actor === 'Pumpkin' ? BASE + '/myfire.gif' : BASE + '/friendfire.gif';
-        const span = document.createElement('span'); span.textContent = `${time} ${actor}`;
-        item.append(img, span); historyEl.append(item);
-      });
-    }
-
-    function createDuckAnimation() {
-      const btn = document.getElementById('loveBtn');
-      const rect = btn.getBoundingClientRect();
-      const anim = document.createElement('div');
-      anim.className = 'duck-animation';
-      anim.textContent = '🔥';
-      anim.style.left = `${rect.left + rect.width/2 - 20}px`;
-      anim.style.top = `${rect.top + rect.height/2 - 20}px`;
-      document.body.append(anim);
-      const x = (Math.random() * 200 - 100).toFixed(0) + 'px';
-      const y = (-Math.random() * 200 - 50).toFixed(0) + 'px';
-      anim.style.setProperty('--x', x);
-      anim.style.setProperty('--y', y);
-      anim.addEventListener('animationend', () => anim.remove());
-    }
-
-    document.getElementById('loveBtn').addEventListener('click', () => {
-      socket.send(JSON.stringify({ type: 'click', role: 'userB' }));
-      socket.send(JSON.stringify({ type: 'plane', from: myInfo.id }));
-      createDuckAnimation();
-    });
+    function renderHistory(arr){histEl.innerHTML='';arr.forEach(({actor,time})=>{const div=document.createElement('div');div.className='history-item';const img=document.createElement('img'),span=document.createElement('span');img.src=actor==='userA'?BASE+'/myfire.gif':BASE+'/friendfire.gif';span.textContent=`${time} ${actor}`;div.append(img,span);histEl.append(div);});}
+    function flyEmoji(){const btn=el('loveBtn'),r=btn.getBoundingClientRect(),d=document.createElement('div');d.className='duck-animation';d.textContent='🔥';d.style.left=`${r.left+r.width/2-16}px`;d.style.top=`${r.top+r.height/2-16}px`;document.body.append(d);const x=(Math.random()*200-100).toFixed()+'px',y=(-Math.random()*200-50).toFixed()+'px';d.style.setProperty('--x',x);d.style.setProperty('--y',y);d.onanimationend=()=>d.remove();}
+    el('loveBtn').onclick=()=>{socket.send(JSON.stringify({type:'click',role}));flyEmoji();};
   </script>
 </body>
 </html>
