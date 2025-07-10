@@ -2,15 +2,17 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Couple App</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Сердца Online</title>
+    <!-- Подключаем клиентскую библиотеку Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap');
 
+        /* --- ОБЩИЕ СТИЛИ --- */
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #232227; /* Темный фон */
+            background-color: #232227;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -18,63 +20,107 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            padding: 15px;
+            box-sizing: border-box;
         }
-
+        
+        /* --- ОСНОВНОЙ ИНТЕРФЕЙС ПРИЛОЖЕНИЯ --- */
         .app-container {
             width: 100%;
             max-width: 400px;
-            height: 100%;
-            max-height: 800px;
-            background-color: #FDF1F7; /* Основной фон приложения */
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-            box-sizing: border-box;
-        }
-
-        .counters {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .profile-card {
-            width: 48%;
-            height: 150px;
-            border-radius: 20px;
             text-align: center;
-            color: white;
-            padding-top: 30px;
-            position: relative;
+            background-color: #FDF1F7;
+            padding: 25px;
+            border-radius: 30px;
             box-sizing: border-box;
         }
-        
-        /* Фиолетовое сердце */
-        .profile-card.pumpkin {
-            background: linear-gradient(145deg, #A463F2, #8B44D3);
-        }
-        
-        /* Розовое сердце */
-        .profile-card.me {
-            background: linear-gradient(145deg, #FF84B1, #E85A90);
-        }
 
-        .profile-card .score {
-            font-size: 3em;
-            font-weight: 800;
-        }
-
-        .profile-card .user-name {
+        #status-display {
+            color: #888;
+            margin-bottom: 20px;
+            min-height: 20px;
             font-size: 0.9em;
         }
 
-        .action-button-container {
+        .hearts-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 40px;
+            gap: 10px;
+        }
+        
+        .heart-unit {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .heart {
+            width: 120px;
+            height: 120px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            transform: rotate(-45deg);
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
+        }
+
+        .heart::before, .heart::after {
+            content: '';
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .heart::before { top: -60px; left: 0; }
+        .heart::after { top: 0; left: 60px; }
+        
+        .heart.pumpkin, .heart.pumpkin::before, .heart.pumpkin::after {
+            background: linear-gradient(145deg, #A463F2, #8B44D3);
+        }
+        .heart.me, .heart.me::before, .heart.me::after {
+            background: linear-gradient(145deg, #FF84B1, #E85A90);
+        }
+
+        .liquid-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: -60px;
+            width: 240px;
+            height: 0%; /* Начальный уровень 0 */
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 45%;
+            transition: height 1s ease-in-out;
+            animation: wave 5s infinite linear;
+        }
+        
+        .heart-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            z-index: 3;
             text-align: center;
-            margin: 20px 0;
+            color: #333;
+            font-weight: 800;
+        }
+        .heart-info .score { font-size: 2.2em; color: #1a1a2e; }
+        .heart-info .name { font-size: 0.8em; margin-top: -5px; color: #444; }
+
+        @keyframes wave {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .action-button {
@@ -88,87 +134,205 @@
             font-weight: 700;
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(255, 90, 112, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .history {
-            flex-grow: 1;
-            background-color: white;
-            color: black;
-            border-radius: 20px;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .history h2 {
-            font-size: 1em;
-            color: #777;
-            margin: 0 0 15px 0;
-        }
-
-        .history-item {
-            display: flex;
-            align-items: center;
-            font-size: 1em;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         
-        .history-item .icon {
-            font-size: 1.5em;
-            margin-right: 15px;
-            background-color: #FFF4D9;
+        .drop {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            z-index: 2;
+            pointer-events: none;
+            animation: fall 0.7s ease-in forwards;
+        }
+        
+        @keyframes fall {
+            0% { transform: translate(-50%, 0); opacity: 1; }
+            100% { transform: translate(-50%, 80px); opacity: 0; }
+        }
+
+        .hugger {
+            width: 80px;
+            height: 60px;
+            background-color: #D6BCF8;
+            border-radius: 30px 30px 20px 20px;
+            position: absolute;
+            z-index: 5;
+            bottom: 5px;
+        }
+        .hugger.left { left: -25px; }
+        .hugger.right { right: -25px; }
+
+        .hugger .face {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: center;
+            gap: 8px;
             align-items: center;
         }
+        .hugger .eye { width: 5px; height: 5px; background-color: #333; border-radius: 50%; }
+        .hugger .smile { width: 10px; height: 5px; border-bottom: 2px solid #333; border-radius: 0 0 10px 10px; }
 
-        .history-item .actor {
-            font-weight: 700;
-        }
-
-        .history-item .time {
-            margin-left: auto;
-            color: #aaa;
-            font-size: 0.9em;
-        }
     </style>
-    </head>
-
+</head>
 <body>
 
-    <div class="app-container">
-        <div class="counters">
-            <div class="profile-card pumpkin">
-                <div class="score">511</div>
-                <div class="user-name">От Pumpkin</div>
+    <!-- Основной контейнер приложения -->
+    <div class="app-container" id="app-container">
+        <div id="status-display">Подключение...</div>
+        
+        <div class="hearts-container">
+            <!-- Сердце партнера -->
+            <div class="heart-unit">
+                <div class="hugger left">
+                    <div class="face"><div class="eye"></div><div class="eye"></div><div class="smile"></div></div>
+                </div>
+                <div class="heart pumpkin">
+                    <div class="liquid-container">
+                        <div class="liquid" id="partner-liquid"></div>
+                    </div>
+                    <div class="heart-info">
+                        <div class="score" id="partner-score">?</div>
+                        <div class="name" id="partner-name">Партнер</div>
+                    </div>
+                </div>
             </div>
-            <div class="profile-card me">
-                <div class="score">97</div>
-                <div class="user-name">От меня</div>
+
+            <!-- Ваше сердце -->
+            <div class="heart-unit">
+                <div class="hugger right">
+                    <div class="face"><div class="eye"></div><div class="eye"></div><div class="smile"></div></div>
+                </div>
+                <div class="heart me">
+                    <div class="liquid-container" id="my-liquid-container">
+                        <div class="liquid" id="my-liquid"></div>
+                    </div>
+                    <div class="heart-info">
+                        <div class="score" id="my-score">?</div>
+                        <div class="name" id="my-name">Я</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="action-button-container">
-            <button class="action-button">❤️ Скучаю по тебе</button>
-        </div>
-
-        <div class="history">
-            <h2>Сегодня</h2>
-            <div class="history-item">
-                <span class="icon">😊</span>
-                <span class="actor">Я</span>
-                <span class="time">23:41</span>
-            </div>
-            <div class="history-item">
-                <span class="icon">😊</span>
-                <span class="actor">Я</span>
-                <span class="time">23:38</span>
-            </div>
-        </div>
+        <button class="action-button" id="miss-you-button" disabled>❤️ Скучаю по тебе</button>
     </div>
 
+    <script>
+        // === JavaScript для подключения к серверу и управления UI ===
+
+        // --- Получаем элементы со страницы ---
+        const statusDisplay = document.getElementById('status-display');
+        const missYouButton = document.getElementById('miss-you-button');
+
+        const myNameDisplay = document.getElementById('my-name');
+        const myScoreDisplay = document.getElementById('my-score');
+        const myLiquid = document.getElementById('my-liquid');
+        const myLiquidContainer = document.getElementById('my-liquid-container');
+        
+        const partnerNameDisplay = document.getElementById('partner-name');
+        const partnerScoreDisplay = document.getElementById('partner-score');
+        const partnerLiquid = document.getElementById('partner-liquid');
+
+        // --- Глобальные переменные ---
+        let socket;
+        const roomName = 'telegram_love_room';
+        const userName = `User_${Math.floor(Math.random() * 1000)}`;
+
+        // --- Логика запускается сразу при загрузке страницы ---
+        document.addEventListener('DOMContentLoaded', () => {
+            myNameDisplay.innerText = userName;
+            initSocketConnection();
+        });
+
+        // --- Инициализация WebSocket соединения ---
+        function initSocketConnection() {
+            const SERVER_URL = 'https://serverheart.onrender.com';
+            socket = io(SERVER_URL);
+
+            // --- Обработчики событий от сервера ---
+            socket.on('connect', () => {
+                console.log('Успешно подключено к серверу. ID сокета:', socket.id);
+                statusDisplay.innerText = 'Входим в комнату...';
+                socket.emit('joinRoom', { room: roomName, user: userName });
+            });
+
+            socket.on('updateState', (data) => {
+                console.log('Получено обновление от сервера:', data);
+                
+                const me = data.users.find(u => u.id === socket.id);
+                const partner = data.users.find(u => u.id !== socket.id);
+
+                // ОБНОВЛЕНИЕ: Всегда доверяем данным с сервера
+                if (me) {
+                    myScoreDisplay.innerText = me.score;
+                    myLiquid.style.height = Math.min(me.score, 100) + '%';
+                }
+
+                if (partner) {
+                    partnerNameDisplay.innerText = partner.name;
+                    partnerScoreDisplay.innerText = partner.score;
+                    partnerLiquid.style.height = Math.min(partner.score, 100) + '%';
+                    statusDisplay.innerText = `В комнате с ${partner.name}`;
+                } else {
+                    partnerNameDisplay.innerText = 'Партнер';
+                    partnerScoreDisplay.innerText = '?';
+                    partnerLiquid.style.height = '0%';
+                    statusDisplay.innerText = 'Ожидание партнера...';
+                }
+                
+                // ОБНОВЛЕНИЕ: Кнопка всегда активна после первой загрузки данных
+                missYouButton.disabled = false;
+            });
+
+            socket.on('error', (message) => {
+                statusDisplay.innerText = `Ошибка: ${message}`;
+            });
+
+            socket.on('disconnect', () => {
+                statusDisplay.innerText = 'Отключено. Попробуйте обновить страницу.';
+                missYouButton.disabled = true;
+            });
+        }
+
+        // --- Отправка событий на сервер ---
+        missYouButton.addEventListener('click', () => {
+            // ОБНОВЛЕНИЕ: Мгновенная реакция на клик + отправка на сервер
+            
+            // 1. Анимация капли
+            createDrop();
+
+            // 2. Мгновенное локальное обновление для лучшего отклика
+            let currentScore = parseInt(myScoreDisplay.innerText) || 0;
+            if (isNaN(currentScore)) currentScore = 0; // На случай если там "?"
+            currentScore++;
+            myScoreDisplay.innerText = currentScore;
+            myLiquid.style.height = Math.min(currentScore, 100) + '%';
+
+            // 3. Отправка события на сервер для синхронизации
+            if (socket && socket.connected) {
+                console.log('Отправка события "missYou"');
+                socket.emit('missYou', { room: roomName });
+            }
+        });
+        
+        function createDrop() {
+            const drop = document.createElement('div');
+            drop.classList.add('drop');
+            myLiquidContainer.appendChild(drop);
+            setTimeout(() => { drop.remove(); }, 700);
+        }
+
+    </script>
 </body>
 </html>
