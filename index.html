@@ -56,6 +56,19 @@
       flex-direction: column; align-items: center; font-size: 12px; color: #888;
     }
     .tab-bar .active { color: #ff758c; }
+
+    /* Анимация смайлика */
+    .duck-animation {
+      position: absolute;
+      font-size: 32px;
+      animation: fly 1.8s ease-out forwards;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    @keyframes fly {
+      0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+      100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(180deg); }
+    }
   </style>
 </head>
 <body>
@@ -99,13 +112,9 @@
   </div>
   <script>
     const BASE = 'https://serverheart.onrender.com';
-    // Инициализация Telegram WebApp
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
-    // Пользователь
+    Telegram.WebApp.ready(); Telegram.WebApp.expand();
     const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
     const myInfo = { id: tgUser.id, name: tgUser.first_name || 'Я', avatar: tgUser.photo_url || BASE + '/avatar-placeholder.png' };
-    // DOM элементы
     const avatarEl = document.getElementById('myAvatar');
     const nameEl = document.getElementById('myName');
     const countEl = document.getElementById('myCount');
@@ -120,7 +129,6 @@
     const iconWidgetsEl = document.getElementById('iconWidgets');
     const tabAvatarEl = document.getElementById('tabAvatar');
 
-    // Установка URL картинок
     avatarEl.src = myInfo.avatar;
     nameEl.textContent = myInfo.name;
     friendAvatarEl.src = BASE + '/avatar-placeholder.png';
@@ -130,29 +138,20 @@
     iconWidgetsEl.src = BASE + '/icon-widgets.svg';
     tabAvatarEl.src = myInfo.avatar;
 
-    let state = { me: { name: myInfo.name, avatar: myInfo.avatar, count: 0 }, friend: { name: 'Друг', avatar: BASE + '/avatar-placeholder.png', count: 0 }, total: 0 };
-    let prizeReceived = false;
-    const fixedRewards = {1: "🎁 Telegram Premium на 1 месяц",2: "💎 Редкий подарок",3: "🌟 150 звёзд",4: "🎁 Подарок-сюрприз",5: "🌟 200 звёзд",6: "🎁 Telegram Premium на 3 месяца",7: "🎁 Подарок-сюрприз",8: "🌟 300 звёзд",9: "💎 Редкий подарок",10: "🎁 Telegram Premium на 6 месяцев"};
+    let state = { total: 0, me: { count: 0 }, friend: { count: 0 }};
 
-    // WebSocket подключение
     const socket = new WebSocket('wss://apple-adhesive-ticket.glitch.me');
     socket.onopen = () => socket.send(JSON.stringify({ type: 'auth', user: myInfo }));
     socket.onmessage = ({ data }) => {
       const msg = JSON.parse(data);
       if (msg.type === 'update') {
         state = msg.payload;
-        updateUI();
-        if (msg.payload.history) renderHistory(msg.payload.history);
+        updateUI(); renderHistory(msg.payload.history || []);
       }
       if (msg.type === 'plane' && msg.from !== myInfo.id) createDuckAnimation();
-      if (msg.type === 'rewardGiven') {
-        prizeReceived = true;
-        toggleModal('waiting'); toggleModal('prize');
-      }
       if (msg.type === 'resetDone') alert('Прогресс обнулён');
     };
 
-    // Обновление UI
     function updateUI() {
       countEl.textContent = `${state.me.count} 🔥`;
       friendCountEl.textContent = `${state.friend.count} 🔥`;
@@ -163,39 +162,38 @@
       progressText.textContent = `${state.total} из ${max}`;
     }
 
-    // История
     function renderHistory(arr) {
-      historyEl.innerHTML = ''; arr.forEach(({ from, count }) => {
+      historyEl.innerHTML = '';
+      arr.forEach(({ actor, time }) => {
         const item = document.createElement('div'); item.className = 'history-item';
-        const img = document.createElement('img'); img.src = (from === myInfo.id ? BASE + '/myfire.gif' : BASE + '/friendfire.gif');
-        const span = document.createElement('span'); span.textContent = `+${count}`;
+        const img = document.createElement('img');
+        img.src = actor === 'Pumpkin' ? BASE + '/myfire.gif' : BASE + '/friendfire.gif';
+        const span = document.createElement('span'); span.textContent = `${time} ${actor}`;
         item.append(img, span); historyEl.append(item);
       });
     }
 
-    // Анимация полёта
     function createDuckAnimation() {
-      const anim = document.createElement('img'); anim.className = 'duck-animation';
-      anim.src = BASE + '/fire.gif'; document.body.append(anim);
-      const x = (Math.random() * window.innerWidth - 20).toFixed(0) + 'px';
-      const y = (Math.random() * window.innerHeight - 20).toFixed(0) + 'px';
-      anim.style.setProperty('--x', x); anim.style.setProperty('--y', y);
+      const btn = document.getElementById('loveBtn');
+      const rect = btn.getBoundingClientRect();
+      const anim = document.createElement('div');
+      anim.className = 'duck-animation';
+      anim.textContent = '🔥';
+      anim.style.left = `${rect.left + rect.width/2 - 20}px`;
+      anim.style.top = `${rect.top + rect.height/2 - 20}px`;
+      document.body.append(anim);
+      const x = (Math.random() * 200 - 100).toFixed(0) + 'px';
+      const y = (-Math.random() * 200 - 50).toFixed(0) + 'px';
+      anim.style.setProperty('--x', x);
+      anim.style.setProperty('--y', y);
       anim.addEventListener('animationend', () => anim.remove());
     }
 
-    // Модалки
-    function toggleModal(id) {
-      document.getElementById(id + 'Modal').classList.toggle('show');
-    }
-    function resetProgress() { socket.send(JSON.stringify({ type: 'reset' })); }
-
-    // Отправить огонёчек
-    function sendLove(times = 1) {
-      for (let i = 0; i < times; i++) socket.send(JSON.stringify({ type: 'click' }));
+    document.getElementById('loveBtn').addEventListener('click', () => {
+      socket.send(JSON.stringify({ type: 'click', role: 'userB' }));
       socket.send(JSON.stringify({ type: 'plane', from: myInfo.id }));
       createDuckAnimation();
-    }
-    document.getElementById('loveBtn').addEventListener('click', () => sendLove());
+    });
   </script>
 </body>
 </html>
