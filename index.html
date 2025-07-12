@@ -58,7 +58,7 @@
     }
 
     #fireBtn {
-      width: 160px;
+      width: 180px;
       height: 50px;
       background: #ff69b4;
       color: white;
@@ -70,6 +70,7 @@
       display: block;
       margin: 260px auto 0;
       touch-action: manipulation;
+      user-select: none; /* 🔒 запрет на выделение */
     }
 
     .emoji {
@@ -91,27 +92,38 @@
       pointer-events: none;
     }
 
-    .my-gif { top: 0; right: 0; }
-    .friend-gif { bottom: 0; left: 0; }
+    .my-gif {
+      top: 0;
+      right: 0;
+    }
+
+    .friend-gif {
+      bottom: 0;
+      left: 0;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Я -->
     <div class="block me-block">
       <img id="meAvatar" class="avatar" src="https://via.placeholder.com/64" />
       <h3 id="meName">Я</h3>
       <div id="meCount" class="big-number">0 🔥</div>
     </div>
 
+    <!-- Друг -->
     <div class="block friend-block">
       <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
       <h3 id="friendName">Друг</h3>
       <div id="friendCount" class="big-number">0 🔥</div>
     </div>
 
+    <!-- Гифки -->
     <img src="mygif.gif" class="gif-image my-gif" />
     <img src="friendgif.gif" class="gif-image friend-gif" />
 
+    <!-- Кнопка -->
     <button id="fireBtn">Отправить огонёк</button>
   </div>
 
@@ -122,7 +134,8 @@
       ref,
       get,
       set,
-      onValue
+      onValue,
+      update
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -137,13 +150,13 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const counterRef = ref(db, "users");
+    const usersRef = ref(db, "users");
 
-    const myNameEl = document.getElementById("meName");
-    const myAvatarEl = document.getElementById("meAvatar");
+    const meNameEl = document.getElementById("meName");
+    const meAvatarEl = document.getElementById("meAvatar");
     const friendNameEl = document.getElementById("friendName");
     const friendAvatarEl = document.getElementById("friendAvatar");
-    const myCountEl = document.getElementById("meCount");
+    const meCountEl = document.getElementById("meCount");
     const friendCountEl = document.getElementById("friendCount");
     const fireBtn = document.getElementById("fireBtn");
 
@@ -153,34 +166,43 @@
     const myName = user.first_name || "Я";
     const myAvatar = user.photo_url || "https://via.placeholder.com/64";
 
-    // Показываем свои данные
-    myNameEl.textContent = "Я";
-    myAvatarEl.src = myAvatar;
+    // Обновляем в базе свои данные
+    await update(ref(db, "users/" + myId), {
+      name: myName,
+      photo_url: myAvatar,
+      count: 0 // если новый
+    });
 
-    // Показываем друга (пока статично, можно сделать по ID)
-    friendNameEl.textContent = "Друг";
-    friendAvatarEl.src = "https://via.placeholder.com/64";
+    function updateUI(data) {
+      const ids = Object.keys(data || {});
+      const others = ids.filter(id => id !== myId);
+      const myData = data[myId] || {};
+      const friendData = data[others[0]] || {};
 
-    function updateCounts(snapshot) {
-      const data = snapshot.val() || {};
-      const meCount = data[myId] || 0;
+      // "Я"
+      meNameEl.textContent = "Я";
+      meAvatarEl.src = myData.photo_url || "https://via.placeholder.com/64";
+      meCountEl.textContent = `${myData.count || 0} 🔥`;
 
-      const entries = Object.entries(data).filter(([key]) => key !== myId);
-      const friendCount = entries.length ? entries[0][1] : 0;
-
-      myCountEl.textContent = `${meCount} 🔥`;
-      friendCountEl.textContent = `${friendCount} 🔥`;
+      // "Друг"
+      friendNameEl.textContent = friendData.name || "Друг";
+      friendAvatarEl.src = friendData.photo_url || "https://via.placeholder.com/64";
+      friendCountEl.textContent = `${friendData.count || 0} 🔥`;
     }
 
-    onValue(counterRef, (snapshot) => {
-      updateCounts(snapshot);
+    onValue(usersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      updateUI(data);
     });
 
     async function sendClick() {
-      const snapshot = await get(counterRef);
+      const snapshot = await get(usersRef);
       const data = snapshot.val() || {};
-      data[myId] = (data[myId] || 0) + 1;
-      await set(counterRef, data);
+      const current = data[myId]?.count || 0;
+
+      await update(ref(db, "users/" + myId), {
+        count: current + 1
+      });
     }
 
     function spawnEmoji(x, y) {
