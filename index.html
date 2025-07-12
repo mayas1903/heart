@@ -212,9 +212,13 @@
 onValue(ref(db, "counter"), snap => {
   const all = snap.val() || {};
   let total = 0;
+
   for (const id in all) {
     if (id !== "total") {
-      total += all[id];
+      const value = all[id];
+      if (typeof value === "number") {
+        total += value;
+      }
     }
   }
 
