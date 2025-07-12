@@ -12,13 +12,13 @@
       background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
       font-family: sans-serif;
       min-height: 100vh;
+      height: 100%;
       overflow: hidden;
     }
 
     .wrapper {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       align-items: center;
       min-height: 100vh;
       max-width: 420px;
@@ -33,6 +33,7 @@
       align-items: center;
       width: 100%;
       gap: 16px;
+      margin-bottom: 16px;
     }
 
     .block {
@@ -75,6 +76,7 @@
       cursor: pointer;
       touch-action: manipulation;
       user-select: none;
+      margin: 12px 0;
     }
 
     .progress {
@@ -83,7 +85,7 @@
       border-radius: 8px;
       height: 10px;
       overflow: hidden;
-      margin: 12px 0 8px;
+      margin: 8px 0;
     }
 
     .progress-bar {
@@ -92,12 +94,20 @@
       transition: width 0.3s ease;
     }
 
+    .progress-container {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
     .history {
       width: 100%;
       max-height: 80px;
       overflow-y: auto;
       font-size: 14px;
       color: #444;
+      margin-top: 12px;
     }
 
     .emoji {
@@ -133,130 +143,16 @@
       </div>
     </div>
 
-    <div class="progress">
-      <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+    <div class="progress-container">
+      <div class="progress">
+        <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+      </div>
+      <div id="progressText">0 из 1000</div>
     </div>
-    <div style="font-size: 12px; margin-bottom: 8px;" id="progressText">0 из 1000</div>
 
     <button id="fireBtn">Отправить огонёк</button>
 
     <div class="history" id="historyLog"></div>
   </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
-      authDomain: "firecounter-fe920.firebaseapp.com",
-      databaseURL: "https://firecounter-fe920-default-rtdb.firebaseio.com",
-      projectId: "firecounter-fe920",
-      storageBucket: "firecounter-fe920.appspot.com",
-      messagingSenderId: "505390225447",
-      appId: "1:505390225447:web:af234b40c416a42e7d9602"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    Telegram.WebApp.ready();
-    const user = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myId = user?.id;
-    const myName = user.first_name || "Я";
-    const myAvatar = user.photo_url || "https://via.placeholder.com/64";
-
-    const myNameEl = document.getElementById("myName");
-    const myAvatarEl = document.getElementById("myAvatar");
-    const friendNameEl = document.getElementById("friendName");
-    const friendAvatarEl = document.getElementById("friendAvatar");
-    const myCountEl = document.getElementById("myCount");
-    const friendCountEl = document.getElementById("friendCount");
-    const fireBtn = document.getElementById("fireBtn");
-    const progressText = document.getElementById("progressText");
-    const progressBar = document.getElementById("progressBar");
-    const historyLog = document.getElementById("historyLog");
-
-    myNameEl.textContent = myName;
-    myAvatarEl.src = myAvatar;
-
-    const userRef = ref(db, 'users');
-
-    function updateUI(snapshotVal) {
-      const users = snapshotVal || {};
-      const userIds = Object.keys(users);
-
-      let meData = users[myId];
-      let friendData = null;
-
-      if (!meData) {
-        meData = { id: myId, name: myName, avatar: myAvatar, count: 0 };
-        set(ref(db, `users/${myId}`), meData);
-      }
-
-      for (const id of userIds) {
-        if (id !== String(myId)) {
-          friendData = users[id];
-          break;
-        }
-      }
-
-      myCountEl.textContent = `${meData.count || 0} 🔥`;
-      progressText.textContent = `${meData.count} из 1000`;
-      progressBar.style.width = `${Math.min(meData.count / 10, 100)}%`;
-
-      if (friendData) {
-        friendNameEl.textContent = friendData.name || "Друг";
-        friendAvatarEl.src = friendData.avatar || "https://via.placeholder.com/64";
-        friendCountEl.textContent = `${friendData.count || 0} 🔥`;
-      }
-    }
-
-    onValue(userRef, (snapshot) => {
-      updateUI(snapshot.val());
-    });
-
-    function sendClick() {
-      const userClickRef = ref(db, `users/${myId}`);
-      onValue(userClickRef, (snap) => {
-        const userData = snap.val();
-        const count = (userData?.count || 0) + 1;
-        const newData = { ...userData, count };
-        set(userClickRef, newData);
-        const logRef = ref(db, `history/${myId}`);
-        push(logRef, `${myName} +1 🔥`);
-      }, { onlyOnce: true });
-    }
-
-    function spawnEmoji(x, y) {
-      const el = document.createElement("div");
-      el.textContent = "🔥";
-      el.className = "emoji";
-      el.style.left = x + "px";
-      el.style.top = y + "px";
-      const dx = (Math.random() - 0.5) * 80;
-      const dy = -80 - Math.random() * 80;
-      el.style.setProperty("--x", dx + "px");
-      el.style.setProperty("--y", dy + "px");
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 1200);
-    }
-
-    fireBtn.addEventListener("click", () => {
-      const rect = fireBtn.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      spawnEmoji(x, y);
-      sendClick();
-    });
-
-    // Listen to history
-    const logRef = ref(db, `history/${myId}`);
-    onValue(logRef, (snapshot) => {
-      const val = snapshot.val() || {};
-      const lines = Object.values(val).slice(-5);
-      historyLog.innerHTML = lines.map(x => `<div>${x}</div>`).join('');
-    });
-  </script>
 </body>
 </html>
