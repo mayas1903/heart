@@ -4,14 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Огонёчки</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
       font-family: sans-serif;
-      min-height: 100vh;
       height: 100%;
       overflow: hidden;
     }
@@ -19,30 +17,29 @@
     .wrapper {
       display: flex;
       flex-direction: column;
+      justify-content: flex-start;
       align-items: center;
-      min-height: 100vh;
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 16px 12px;
+      height: 100%;
+      padding: 16px;
       box-sizing: border-box;
     }
 
     .row {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: space-between;
       width: 100%;
-      gap: 16px;
-      margin-bottom: 16px;
+      max-width: 420px;
+      margin-bottom: 20px;
     }
 
     .block {
       background: white;
       border-radius: 12px;
       padding: 10px;
-      width: 140px;
       text-align: center;
       box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+      width: 140px;
     }
 
     .avatar {
@@ -53,61 +50,30 @@
       margin-bottom: 6px;
     }
 
-    .gif {
-      width: 100px;
-      height: auto;
-    }
-
     .big-number {
       font-size: 22px;
       font-weight: bold;
       color: #d81b60;
     }
 
+    .gif {
+      width: 180px;
+      pointer-events: none;
+    }
+
     #fireBtn {
-      width: 220px;
-      height: 52px;
+      width: 200px;
+      height: 50px;
       background: #ff69b4;
       color: white;
       font-size: 18px;
       border: none;
-      border-radius: 26px;
+      border-radius: 25px;
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
       cursor: pointer;
       touch-action: manipulation;
       user-select: none;
-      margin: 12px 0;
-    }
-
-    .progress {
-      width: 100%;
-      background: #eee;
-      border-radius: 8px;
-      height: 10px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background: #2196f3;
-      transition: width 0.3s ease;
-    }
-
-    .progress-container {
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-
-    .history {
-      width: 100%;
-      max-height: 80px;
-      overflow-y: auto;
-      font-size: 14px;
-      color: #444;
-      margin-top: 12px;
+      margin-bottom: 20px;
     }
 
     .emoji {
@@ -121,13 +87,171 @@
       0% { opacity: 1; transform: translate(0, 0); }
       100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
     }
+
+    .progress-container {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 12px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #ffe0ef;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #d81b60;
+      width: 0%;
+    }
+
+    .history {
+      font-size: 14px;
+      color: #444;
+      width: 100%;
+      max-width: 420px;
+      text-align: left;
+      padding: 8px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+    }
   </style>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, increment, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
+      authDomain: "firecounter-fe920.firebaseapp.com",
+      databaseURL: "https://firecounter-fe920-default-rtdb.firebaseio.com",
+      projectId: "firecounter-fe920",
+      storageBucket: "firecounter-fe920.appspot.com",
+      messagingSenderId: "505390225447",
+      appId: "1:505390225447:web:af234b40c416a42e7d9602"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const myNameEl = document.getElementById("myName");
+    const myAvatarEl = document.getElementById("myAvatar");
+    const friendNameEl = document.getElementById("friendName");
+    const friendAvatarEl = document.getElementById("friendAvatar");
+    const myCountEl = document.getElementById("myCount");
+    const friendCountEl = document.getElementById("friendCount");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const historyLog = document.getElementById("historyLog");
+
+    const MAX_COUNT = 1000;
+    let history = [];
+
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    const me = tg.initDataUnsafe?.user || {};
+    const myId = me.id || "unknown";
+    const myName = me.first_name || "Я";
+    const myAvatar = me.photo_url || "https://via.placeholder.com/64";
+
+    myNameEl.textContent = myName;
+    myAvatarEl.src = myAvatar;
+
+    const userPath = `users/${myId}`;
+    set(ref(db, userPath + "/meta"), {
+      name: myName,
+      avatar: myAvatar,
+      ts: Date.now()
+    });
+
+    const counterRef = ref(db, "counter");
+
+    onValue(counterRef, snap => {
+      const data = snap.val() || {};
+      const meVal = data[myId] || 0;
+      let total = 0;
+      let friendVal = 0;
+
+      Object.entries(data).forEach(([uid, val]) => {
+        if (uid === myId || uid === "history") return;
+        total += val;
+        friendVal = val;
+      });
+
+      myCountEl.textContent = `${meVal} 🔥`;
+      friendCountEl.textContent = `${friendVal} 🔥`;
+
+      const progress = Math.min(((meVal + friendVal) / MAX_COUNT) * 100, 100);
+      progressBar.style.width = progress + "%";
+      progressText.textContent = `${meVal + friendVal} из ${MAX_COUNT}`;
+    });
+
+    const metaRef = ref(db, "users");
+    onValue(metaRef, snap => {
+      const all = snap.val() || {};
+      Object.entries(all).forEach(([uid, user]) => {
+        if (uid !== myId) {
+          friendNameEl.textContent = user.name || "Друг";
+          friendAvatarEl.src = user.avatar || "https://via.placeholder.com/64";
+        }
+      });
+    });
+
+    function logHistory() {
+      const histRef = ref(db, "counter/history");
+      onValue(histRef, snap => {
+        const list = snap.val() || [];
+        historyLog.innerHTML = "";
+        list.slice(-5).reverse().forEach(entry => {
+          const el = document.createElement("div");
+          el.textContent = `${entry.name}: 🔥`;
+          historyLog.appendChild(el);
+        });
+      });
+    }
+
+    logHistory();
+
+    function sendClick() {
+      const userCounterRef = ref(db, `counter/${myId}`);
+      update(ref(db, "counter"), {
+        history: [...history.slice(-4), { name: myName, ts: Date.now() }]
+      });
+      set(userCounterRef, increment(1));
+    }
+
+    document.getElementById("fireBtn").addEventListener("click", () => {
+      const btn = document.getElementById("fireBtn");
+      const rect = btn.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      spawnEmoji(x, y);
+      sendClick();
+    });
+
+    function spawnEmoji(x, y) {
+      const el = document.createElement("div");
+      el.textContent = "🔥";
+      el.className = "emoji";
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      el.style.setProperty("--x", (Math.random() - 0.5) * 100 + "px");
+      el.style.setProperty("--y", -60 - Math.random() * 60 + "px");
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
+  </script>
 </head>
 <body>
   <div class="wrapper">
     <div class="row">
       <div class="block">
-        <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
+        <img id="myAvatar" class="avatar" src="" />
         <h3 id="myName">Я</h3>
         <div class="big-number" id="myCount">0 🔥</div>
       </div>
@@ -137,20 +261,20 @@
     <div class="row">
       <img src="friendgif.gif" class="gif" />
       <div class="block">
-        <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
+        <img id="friendAvatar" class="avatar" src="" />
         <h3 id="friendName">Друг</h3>
         <div class="big-number" id="friendCount">0 🔥</div>
       </div>
     </div>
 
+    <button id="fireBtn">Отправить огонёк</button>
+
     <div class="progress-container">
       <div class="progress">
-        <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        <div id="progressBar" class="progress-bar"></div>
       </div>
       <div id="progressText">0 из 1000</div>
     </div>
-
-    <button id="fireBtn">Отправить огонёк</button>
 
     <div class="history" id="historyLog"></div>
   </div>
