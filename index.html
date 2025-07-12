@@ -2,10 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Огонёчки</title>
 
-  <!-- Стили -->
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
     html, body {
       margin: 0;
@@ -43,8 +45,16 @@
       right: 20px;
     }
 
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 6px;
+    }
+
     .big-number {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
       color: #d81b60;
     }
@@ -62,6 +72,7 @@
       position: relative;
       margin: 260px auto 0;
       display: block;
+      touch-action: manipulation; /* 🔥 убирает зум */
     }
 
     .emoji {
@@ -83,38 +94,35 @@
       pointer-events: none;
     }
 
-    .my-gif {
-      top: 0;
-      right: 0;
-    }
-
-    .friend-gif {
-      bottom: 0;
-      left: 0;
-    }
+    .my-gif { top: 0; right: 0; }
+    .friend-gif { bottom: 0; left: 0; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Счётчики -->
+    <!-- Счётчик тебя -->
     <div class="block me-block">
-      <h3>Ты</h3>
+      <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
+      <h3 id="myName">Ты</h3>
       <div id="meCount" class="big-number">0 🔥</div>
     </div>
+
+    <!-- Счётчик друга -->
     <div class="block friend-block">
-      <h3>Друг</h3>
+      <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
+      <h3 id="friendName">Друг</h3>
       <div id="friendCount" class="big-number">0 🔥</div>
     </div>
-
-    <!-- Кнопка -->
-    <button id="fireBtn">🔥</button>
 
     <!-- Гифки -->
     <img src="mygif.gif" class="gif-image my-gif" alt="My GIF" />
     <img src="friendgif.gif" class="gif-image friend-gif" alt="Friend GIF" />
+
+    <!-- Кнопка 🔥 -->
+    <button id="fireBtn">🔥</button>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase через ES-модули -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -139,9 +147,27 @@
     const db = getDatabase(app);
     const counterRef = ref(db, "counter");
 
+    const myNameEl = document.getElementById("myName");
+    const myAvatarEl = document.getElementById("myAvatar");
+    const friendNameEl = document.getElementById("friendName");
+    const friendAvatarEl = document.getElementById("friendAvatar");
     const meCountEl = document.getElementById("meCount");
     const friendCountEl = document.getElementById("friendCount");
     const fireBtn = document.getElementById("fireBtn");
+
+    // Получаем данные пользователя из Telegram
+    Telegram.WebApp.ready();
+    const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
+    const myName = tgUser.first_name || "Ты";
+    const myAvatar = tgUser.photo_url || "https://via.placeholder.com/64";
+
+    // Устанавливаем свои данные
+    myNameEl.textContent = myName;
+    myAvatarEl.src = myAvatar;
+
+    // Фиксированные данные друга (можно заменить на реальные)
+    friendNameEl.textContent = "Друг";
+    friendAvatarEl.src = "https://via.placeholder.com/64";
 
     function updateUI(data) {
       const me = data?.me || 0;
@@ -150,6 +176,7 @@
       friendCountEl.textContent = `${friend} 🔥`;
     }
 
+    // Слушаем обновления из базы
     onValue(counterRef, (snapshot) => {
       const data = snapshot.val();
       updateUI(data);
@@ -158,7 +185,15 @@
     async function sendClick() {
       const snapshot = await get(counterRef);
       const data = snapshot.val() || { me: 0, friend: 0 };
-      data.me++;
+
+      // Проверяем, кто жмёт
+      const isMe = true; // можно сделать динамично
+      if (isMe) {
+        data.me++;
+      } else {
+        data.friend++;
+      }
+
       await set(counterRef, data);
     }
 
@@ -169,12 +204,10 @@
         el.className = "emoji";
         el.style.left = x + "px";
         el.style.top = y + "px";
-
         const dx = (Math.random() - 0.5) * 120;
         const dy = -80 - Math.random() * 100;
         el.style.setProperty("--x", dx + "px");
         el.style.setProperty("--y", dy + "px");
-
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1200);
       }
