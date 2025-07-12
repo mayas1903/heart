@@ -6,16 +6,17 @@
   <title>Огонёчки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
       font-family: sans-serif;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      height: 100dvh;
+      overflow: hidden;
     }
 
     .row {
@@ -23,7 +24,7 @@
       align-items: center;
       justify-content: center;
       gap: 16px;
-      margin: 20px 0;
+      padding: 10px;
     }
 
     .block {
@@ -65,6 +66,7 @@
       cursor: pointer;
       touch-action: manipulation;
       user-select: none;
+      margin: 10px auto;
     }
 
     .emoji {
@@ -103,7 +105,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -117,45 +119,66 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const counterRef = ref(db, "counter");
 
-    const myCountEl = document.getElementById("myCount");
-    const friendCountEl = document.getElementById("friendCount");
+    Telegram.WebApp.ready();
+    const user = Telegram.WebApp.initDataUnsafe?.user || {};
+    const myId = user?.id;
+    const myName = user.first_name || "Я";
+    const myAvatar = user.photo_url || "https://via.placeholder.com/64";
 
     const myNameEl = document.getElementById("myName");
     const myAvatarEl = document.getElementById("myAvatar");
     const friendNameEl = document.getElementById("friendName");
     const friendAvatarEl = document.getElementById("friendAvatar");
 
-    Telegram.WebApp.ready();
-    const user = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myName = user.first_name || "Я";
-    const myAvatar = user.photo_url || "https://via.placeholder.com/64";
+    const myCountEl = document.getElementById("myCount");
+    const friendCountEl = document.getElementById("friendCount");
+
+    const fireBtn = document.getElementById("fireBtn");
 
     myNameEl.textContent = myName;
     myAvatarEl.src = myAvatar;
 
-    // Set friend static for demo — in real use case, use backend logic to reverse roles
-    friendNameEl.textContent = "Друг";
-    friendAvatarEl.src = "https://via.placeholder.com/64";
+    const userRef = ref(db, 'users');
 
-    function updateUI(data) {
-      const me = data?.me || 0;
-      const friend = data?.friend || 0;
-      myCountEl.textContent = `${me} 🔥`;
-      friendCountEl.textContent = `${friend} 🔥`;
+    function updateUI(snapshotVal) {
+      const users = snapshotVal || {};
+      const userIds = Object.keys(users);
+
+      let meData = users[myId];
+      let friendData = null;
+
+      if (!meData) {
+        meData = { id: myId, name: myName, avatar: myAvatar, count: 0 };
+        set(ref(db, `users/${myId}`), meData);
+      }
+
+      for (const id of userIds) {
+        if (id !== String(myId)) {
+          friendData = users[id];
+          break;
+        }
+      }
+
+      myCountEl.textContent = `${meData.count || 0} 🔥`;
+      if (friendData) {
+        friendNameEl.textContent = friendData.name || "Друг";
+        friendAvatarEl.src = friendData.avatar || "https://via.placeholder.com/64";
+        friendCountEl.textContent = `${friendData.count || 0} 🔥`;
+      }
     }
 
-    onValue(counterRef, (snapshot) => {
-      const data = snapshot.val();
-      updateUI(data);
+    onValue(userRef, (snapshot) => {
+      updateUI(snapshot.val());
     });
 
-    async function sendClick() {
-      const snapshot = await get(counterRef);
-      const data = snapshot.val() || { me: 0, friend: 0 };
-      data.me++;
-      await set(counterRef, data);
+    function sendClick() {
+      const userClickRef = ref(db, `users/${myId}`);
+      onValue(userClickRef, (snap) => {
+        const userData = snap.val();
+        const count = (userData?.count || 0) + 1;
+        set(userClickRef, { ...userData, count });
+      }, { onlyOnce: true });
     }
 
     function spawnEmoji(x, y) {
@@ -172,13 +195,12 @@
       setTimeout(() => el.remove(), 1200);
     }
 
-    const btn = document.getElementById("fireBtn");
-    btn.addEventListener("click", async () => {
-      const rect = btn.getBoundingClientRect();
+    fireBtn.addEventListener("click", () => {
+      const rect = fireBtn.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       spawnEmoji(x, y);
-      await sendClick();
+      sendClick();
     });
   </script>
 </body>
