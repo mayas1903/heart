@@ -7,100 +7,109 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
-      height: 100%;
-      overflow: hidden;
-    }
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
+  height: 100%;
+  overflow: hidden;
+}
 
-    .container {
-      max-width: 420px;
-      margin: auto;
-      padding: 16px;
-      position: relative;
-    }
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 16px;
+  position: relative;
+}
 
-    .block {
-      background: white;
-      border-radius: 12px;
-      padding: 10px;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
-      width: 140px;
-      position: absolute;
-    }
+.block {
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+  width: 140px;
+  position: absolute;
+}
 
-    .me-block {
-      top: 20px;
-      left: 20px;
-    }
+.me-block {
+  top: 20px;
+  left: 20px;
+}
 
-    .friend-block {
-      bottom: 20px;
-      right: 20px;
-    }
+/* 🟣 Блок друга внизу и по центру */
+.friend-block {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+  width: 140px;
+}
 
-    .avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 6px;
-    }
+/* 🟣 Гифка друга ниже блока */
+.friend-gif {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  z-index: 1;
+  pointer-events: none;
+}
 
-    .big-number {
-      font-size: 22px;
-      font-weight: bold;
-      color: #d81b60;
-    }
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 6px;
+}
 
-    #fireBtn {
-      width: 180px;
-      height: 50px;
-      background: #ff69b4;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 25px;
-      box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
-      cursor: pointer;
-      display: block;
-      margin: 260px auto 0;
-      touch-action: manipulation;
-      user-select: none; /* 🔒 запрет на выделение */
-    }
+.big-number {
+  font-size: 22px;
+  font-weight: bold;
+  color: #d81b60;
+}
 
-    .emoji {
-      position: absolute;
-      font-size: 32px;
-      animation: fly 1.2s ease-out forwards;
-      pointer-events: none;
-    }
+#fireBtn {
+  width: 180px;
+  height: 50px;
+  background: #ff69b4;
+  color: white;
+  font-size: 18px;
+  border: none;
+  border-radius: 25px;
+  box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
+  cursor: pointer;
+  display: block;
+  margin: 260px auto 0;
+  touch-action: manipulation;
+  user-select: none; /* 🔒 запрет на выделение */
+}
 
-    @keyframes fly {
-      0% { opacity: 1; transform: translate(0, 0); }
-      100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
-    }
+.emoji {
+  position: absolute;
+  font-size: 32px;
+  animation: fly 1.2s ease-out forwards;
+  pointer-events: none;
+}
 
-    .gif-image {
-      position: absolute;
-      width: 180px;
-      z-index: 1;
-      pointer-events: none;
-    }
+@keyframes fly {
+  0% { opacity: 1; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
+}
 
-    .my-gif {
-      top: 0;
-      right: 0;
-    }
-
-    .friend-gif {
-      bottom: 0;
-      left: 0;
-    }
+/* 🟢 Гифка “Я” остаётся в углу */
+.my-gif {
+  top: 0;
+  right: 0;
+}
   </style>
 </head>
 <body>
