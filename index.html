@@ -363,6 +363,7 @@ window.toggleModal = toggleModal;
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("resetBtn").addEventListener("click", () => {
     set(ref(db, `counter/${myId}`), 0);
+    set(ref(db, "counter/total"), 0);
     push(ref(db, "history"), {
       name: myName,
       avatar: myAvatar,
