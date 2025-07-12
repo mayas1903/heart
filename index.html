@@ -193,9 +193,10 @@ document.getElementById("fireBtn").addEventListener("click", async () => {
   const y = rect.top + rect.height / 2;
   spawnEmojis(x, y);
 
-  await sendClick();   // дожидаемся ответа от сервера
-  fetchState();        // обновляем счётчики
+  await sendClick();       // <--- ждём пока отправится
+  await fetchState();      // <--- ждём пока придёт обновлённое состояние
 });
+
 
 
     setInterval(fetchState, 1000);
