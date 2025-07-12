@@ -13,20 +13,25 @@
       font-family: sans-serif;
       height: 100vh;
       overflow: hidden;
+    }
+
+    .wrapper {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
+      height: 100vh;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 16px;
+      box-sizing: border-box;
     }
 
-    .top-row, .bottom-row {
+    .row {
       display: flex;
-      align-items: center;
       justify-content: center;
-      gap: 16px;
+      align-items: center;
+      gap: 12px;
     }
 
     .block {
@@ -47,7 +52,8 @@
     }
 
     .gif {
-      width: 120px;
+      width: 100px;
+      height: auto;
     }
 
     .big-number {
@@ -57,17 +63,16 @@
     }
 
     #fireBtn {
-      width: 200px;
-      height: 50px;
+      width: 220px;
+      height: 52px;
       background: #ff69b4;
       color: white;
       font-size: 18px;
       border: none;
-      border-radius: 25px;
+      border-radius: 26px;
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
       cursor: pointer;
       touch-action: manipulation;
-      margin: 10px auto;
       user-select: none;
     }
 
@@ -85,25 +90,27 @@
   </style>
 </head>
 <body>
-  <div class="top-row">
-    <div class="block">
-      <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
-      <h3 id="myName">Я</h3>
-      <div class="big-number" id="myCount">0 🔥</div>
+  <div class="wrapper">
+    <div class="row">
+      <div class="block">
+        <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
+        <h3 id="myName">Я</h3>
+        <div class="big-number" id="myCount">0 🔥</div>
+      </div>
+      <img src="mygif.gif" class="gif" />
     </div>
-    <img src="mygif.gif" class="gif" />
-  </div>
 
-  <div class="bottom-row">
-    <img src="friendgif.gif" class="gif" />
-    <div class="block">
-      <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
-      <h3 id="friendName">Друг</h3>
-      <div class="big-number" id="friendCount">0 🔥</div>
+    <button id="fireBtn">Отправить огонёк</button>
+
+    <div class="row">
+      <img src="friendgif.gif" class="gif" />
+      <div class="block">
+        <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
+        <h3 id="friendName">Друг</h3>
+        <div class="big-number" id="friendCount">0 🔥</div>
+      </div>
     </div>
   </div>
-
-  <button id="fireBtn">Отправить огонёк</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -132,10 +139,8 @@
     const myAvatarEl = document.getElementById("myAvatar");
     const friendNameEl = document.getElementById("friendName");
     const friendAvatarEl = document.getElementById("friendAvatar");
-
     const myCountEl = document.getElementById("myCount");
     const friendCountEl = document.getElementById("friendCount");
-
     const fireBtn = document.getElementById("fireBtn");
 
     myNameEl.textContent = myName;
@@ -207,3 +212,4 @@
   </script>
 </body>
 </html>
+
