@@ -83,7 +83,7 @@
   <div class="container">
     <div class="user-block">
       <div class="block-content">
-        <img id="myAvatar" class="avatar" src="" />
+        <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
         <h3 id="myName">Я</h3>
         <div class="big-number" id="myCount">0 🔥</div>
       </div>
@@ -103,6 +103,12 @@
   </div>
 
   <script>
+    // Инициализация Telegram WebApp
+    Telegram.WebApp.ready();
+    const user = Telegram.WebApp.initDataUnsafe?.user || {};
+    document.getElementById("myName").textContent = user.first_name || "Я";
+    document.getElementById("myAvatar").src = user.photo_url || "https://via.placeholder.com/64";
+
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -118,15 +124,6 @@
     const db = firebase.database();
     const counterRef = db.ref("counter");
 
-    Telegram.WebApp.ready();
-
-    const user = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myName = user.first_name || "Я";
-    const myAvatar = user.photo_url || "https://via.placeholder.com/64";
-
-    document.getElementById("myName").textContent = myName;
-    document.getElementById("myAvatar").src = myAvatar;
-
     const myCountEl = document.getElementById("myCount");
     const friendCountEl = document.getElementById("friendCount");
 
@@ -135,11 +132,13 @@
       friendCountEl.textContent = `${friend} 🔥`;
     }
 
+    // Реальное обновление при любом изменении
     counterRef.on("value", (snapshot) => {
       const data = snapshot.val() || { me: 0, friend: 0 };
       updateCounts(data.me, data.friend);
     });
 
+    // При нажатии: увеличить "me"
     async function sendClick() {
       const snapshot = await counterRef.get();
       const data = snapshot.val() || { me: 0, friend: 0 };
