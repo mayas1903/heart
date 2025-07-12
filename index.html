@@ -2,16 +2,20 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Огонёчки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
+
   <style>
     html, body {
-      width: 100%;
-      height: 100%;
       margin: 0;
       font-family: sans-serif;
       background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
+      height: 100%;
       overflow: hidden;
     }
     .container {
@@ -37,10 +41,6 @@
       object-fit: cover;
       margin-bottom: 6px;
     }
-    .block-content h3 {
-      margin: 0;
-      font-size: 16px;
-    }
     .big-number {
       font-size: 22px;
       font-weight: bold;
@@ -65,8 +65,6 @@
       font-size: 32px;
       color: white;
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
-      position: relative;
-      overflow: hidden;
       cursor: pointer;
     }
     .emoji {
@@ -90,6 +88,7 @@
         <div class="big-number" id="myCount">0 🔥</div>
       </div>
     </div>
+
     <div class="friend-block">
       <div class="block-content">
         <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
@@ -97,6 +96,7 @@
         <div class="big-number" id="friendCount">0 🔥</div>
       </div>
     </div>
+
     <img src="mygif.gif" class="gif-image user-gif" />
     <img src="friendgif.gif" class="gif-image friend-gif" />
     <button class="fire-button" id="fireBtn">🔥</button>
@@ -115,6 +115,40 @@
     const myCountEl = document.getElementById("myCount");
     const friendCountEl = document.getElementById("friendCount");
 
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
+      authDomain: "firecounter-fe920.firebaseapp.com",
+      databaseURL: "https://firecounter-fe920-default-rtdb.firebaseio.com",
+      projectId: "firecounter-fe920",
+      storageBucket: "firecounter-fe920.firebasestorage.app",
+      messagingSenderId: "505390225447",
+      appId: "1:505390225447:web:af234b40c416a42e7d9602"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const counterRef = db.ref("counter");
+
+    function updateCounts(me, friend) {
+      myCountEl.textContent = `${me} 🔥`;
+      friendCountEl.textContent = `${friend} 🔥`;
+    }
+
+    // Слушаем изменения из базы
+    counterRef.on("value", (snapshot) => {
+      const data = snapshot.val() || { me: 0, friend: 0 };
+      updateCounts(data.me, data.friend);
+    });
+
+    // Увеличиваем счётчик
+    async function sendClick() {
+      const snapshot = await counterRef.get();
+      const data = snapshot.val() || { me: 0, friend: 0 };
+      data.me++;
+      await counterRef.set(data);
+    }
+
     function spawnEmojis(x, y) {
       for (let i = 0; i < 6; i++) {
         const el = document.createElement("div");
@@ -131,52 +165,14 @@
       }
     }
 
-    async function sendClick() {
-      try {
-        const res = await fetch("https://serverheart.onrender.com/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ from: "me" })
-        });
-        const result = await res.json();
-        console.log("✅ Отправлено:", result);
-        return result.state;
-      } catch (err) {
-        console.error("❌ Ошибка отправки:", err);
-      }
-    }
-
-    async function fetchState() {
-      try {
-        const res = await fetch("https://serverheart.onrender.com/state");
-        const data = await res.json();
-        updateCounts(data.me, data.friend);
-      } catch (err) {
-        console.error("❌ Ошибка получения состояния:", err);
-      }
-    }
-
-    function updateCounts(me, friend) {
-      myCountEl.textContent = `${me} 🔥`;
-      friendCountEl.textContent = `${friend} 🔥`;
-    }
-
     document.getElementById("fireBtn").addEventListener("click", async () => {
       const btn = document.getElementById("fireBtn");
       const rect = btn.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       spawnEmojis(x, y);
-
-      const state = await sendClick(); // ждём ответа от сервера
-      if (state) {
-        updateCounts(state.me, state.friend); // сразу обновляем
-      }
+      await sendClick();
     });
-
-    // автообновление
-    setInterval(fetchState, 1500);
-    fetchState();
   </script>
 </body>
 </html>
