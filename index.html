@@ -158,6 +158,25 @@
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+    .modal-content button {
+  margin-top: 16px;
+  background: #ff4081;
+  color: white;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 24px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(255, 64, 129, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.modal-content button:hover {
+  transform: scale(1.03);
+}
+
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
@@ -238,8 +257,6 @@ onValue(ref(db, "counter"), snap => {
   }
 });
 
-
-
     onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
       const entry = snap.val();
@@ -269,12 +286,21 @@ onValue(ref(db, "counter"), snap => {
       setTimeout(() => emoji.remove(), 1200);
     });
 
-    document.getElementById("fireBtn").addEventListener("click", () => {
-      runTransaction(ref(db, `counter/${myId}`), val => (val || 0) + 1);
-      runTransaction(ref(db, "counter/total"), val => (val || 0) + 1);
-      push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: Date.now() });
-      push(ref(db, "fire"), { ts: Date.now() });
-    });
+let lastTapTime = 0;
+
+document.getElementById("fireBtn").addEventListener("click", () => {
+  const now = Date.now();
+  const doubleTap = now - lastTapTime < 300;
+  lastTapTime = now;
+
+  const increment = doubleTap ? 100 : 1;
+
+  runTransaction(ref(db, `counter/${myId}`), val => (val || 0) + increment);
+  runTransaction(ref(db, "counter/total"), val => (val || 0) + increment);
+  push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: now });
+  push(ref(db, "fire"), { ts: now });
+});
+
     let rewardGiven = false;
 
 function toggleModal(type, show = true) {
@@ -300,6 +326,22 @@ function claimReward() {
     toggleModal('prize', true);
   }, 2500);
 }
+    window.claimReward = claimReward;
+window.toggleModal = toggleModal;
+
+// ждём загрузки DOM
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    set(ref(db, `counter/${myId}`), 0);
+    push(ref(db, "history"), {
+      name: myName,
+      avatar: myAvatar,
+      ts: Date.now(),
+      reset: true
+    });
+  });
+});
+
   </script>
 </head>
 <body>
@@ -348,6 +390,19 @@ function claimReward() {
         <div class="big-number" id="friendCount">0 🔥</div>
       </div>
     </div>
+   <button id="resetBtn" style="
+  background: #eee; color: #555;
+  font-size: 13px;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  margin-top: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  cursor: pointer;
+">
+  Обнулить мои клики
+</button>
+
     <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">
       Отправить огонёк
     </button>
