@@ -186,14 +186,17 @@
       }
     }
 
-    document.getElementById("fireBtn").addEventListener("click", () => {
-      const btn = document.getElementById("fireBtn");
-      const rect = btn.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      spawnEmojis(x, y);
-      sendClick();
-    });
+document.getElementById("fireBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("fireBtn");
+  const rect = btn.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  spawnEmojis(x, y);
+
+  await sendClick();   // дожидаемся ответа от сервера
+  fetchState();        // обновляем счётчики
+});
+
 
     setInterval(fetchState, 1000);
     fetchState();
