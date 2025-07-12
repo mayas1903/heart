@@ -22,12 +22,11 @@
       user-select: none;
     }
 
-    .row {
+    .top-row, .bottom-row {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 16px;
-      flex-wrap: wrap;
     }
 
     .block {
@@ -68,7 +67,8 @@
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
       cursor: pointer;
       touch-action: manipulation;
-      margin: 16px auto;
+      margin: 10px auto;
+      user-select: none;
     }
 
     .emoji {
@@ -85,7 +85,7 @@
   </style>
 </head>
 <body>
-  <div class="row">
+  <div class="top-row">
     <div class="block">
       <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
       <h3 id="myName">Я</h3>
@@ -94,7 +94,7 @@
     <img src="mygif.gif" class="gif" />
   </div>
 
-  <div class="row">
+  <div class="bottom-row">
     <img src="friendgif.gif" class="gif" />
     <div class="block">
       <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
