@@ -118,6 +118,46 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    .modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 300px;
+  animation: pop 0.3s ease;
+}
+
+.modal-img {
+  width: 120px;
+  margin-bottom: 12px;
+}
+
+.hourglass {
+  font-size: 48px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
@@ -169,10 +209,26 @@
       document.getElementById("myCount").textContent = `${snap.val() || 0} 🔥`;
     });
 
-    onValue(ref(db, "counter/total"), snap => {
-      const total = snap.val() || 0;
-      document.getElementById("progressBar").style.width = Math.min((total / 1000) * 100, 100) + "%";
-    });
+onValue(ref(db, "counter/total"), snap => {
+  const total = snap.val() || 0;
+  const bar = document.getElementById("progressBar");
+  const label = document.getElementById("progressLabel");
+
+  const percent = Math.min((total / 1000) * 100, 100);
+  bar.style.width = percent + "%";
+  label.textContent = `${total} / 1000`;
+
+  if (total >= 1000) {
+    bar.style.background = "#4caf50"; // зеленый когда цель достигнута
+    if (!rewardGiven) {
+      rewardGiven = true;
+      toggleModal('reward', true);
+    }
+  } else {
+    bar.style.background = "#d81b60"; // обычный цвет до 1000
+  }
+});
+
 
     onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
@@ -209,9 +265,62 @@
       push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: Date.now() });
       push(ref(db, "fire"), { ts: Date.now() });
     });
+    let rewardGiven = false;
+
+function toggleModal(type, show = true) {
+  document.getElementById(`${type}Modal`).style.display = show ? 'flex' : 'none';
+}
+
+function claimReward() {
+  toggleModal('reward', false);
+  toggleModal('waiting', true);
+
+  setTimeout(() => {
+    toggleModal('waiting', false);
+    const prizes = [
+      'Telegram Premium на 1 месяц',
+      'Telegram Premium на 3 месяца',
+      'Подарок 💍 Кольцо',
+      'Подарок 🧸 Мишка',
+      '100 ⭐️ Telegram звёзд',
+      '300 ⭐️ Telegram звёзд'
+    ];
+    const prize = prizes[Math.floor(Math.random() * prizes.length)];
+    document.getElementById("prizeText").innerHTML = `<strong>${prize}</strong>`;
+    toggleModal('prize', true);
+  }, 2500);
+}
   </script>
 </head>
 <body>
+  <!-- Модалка Награда -->
+<div class="modal" id="rewardModal">
+  <div class="modal-content">
+    <img src="plane.gif" class="modal-img" />
+    <h3>🎉 Ура! Вы собрали <span id="rewardLevel">1000</span> огонечков!</h3>
+    <p>Вам доступен подарок</p>
+    <button onclick="claimReward()">Получить 🤩</button>
+  </div>
+</div>
+
+<!-- Модалка ожидания: просто ⏳ -->
+<div class="modal" id="waitingModal">
+  <div class="modal-content">
+    <div class="hourglass">⏳</div>
+    <p>Открываем подарок...</p>
+  </div>
+</div>
+
+<!-- Модалка Приз -->
+<div class="modal" id="prizeModal">
+  <div class="modal-content">
+    <img src="priz.gif" class="modal-img" />
+    <h3>🎁 Вы получили:</h3>
+    <p id="prizeText"><strong>Telegram Premium на 3 месяца</strong></p>
+    <button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
+  </div>
+</div>
+
   <div class="wrapper">
     <div class="row">
       <div class="block">
@@ -232,10 +341,12 @@
     <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">
       Отправить огонёк
     </button>
-    <div class="progress-container">
-      <div class="progress">
-        <div id="progressBar" class="progress-bar"></div>
-      </div>
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
     </div>
     <div class="history" id="historyLog"></div>
   </div>
