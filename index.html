@@ -209,8 +209,15 @@
       document.getElementById("myCount").textContent = `${snap.val() || 0} 🔥`;
     });
 
-onValue(ref(db, "counter/total"), snap => {
-  const total = snap.val() || 0;
+onValue(ref(db, "counter"), snap => {
+  const all = snap.val() || {};
+  let total = 0;
+  for (const id in all) {
+    if (id !== "total") {
+      total += all[id];
+    }
+  }
+
   const bar = document.getElementById("progressBar");
   const label = document.getElementById("progressLabel");
 
@@ -218,16 +225,15 @@ onValue(ref(db, "counter/total"), snap => {
   bar.style.width = percent + "%";
   label.textContent = `${total} / 1000`;
 
-  if (total >= 1000) {
-    bar.style.background = "#4caf50"; // зеленый когда цель достигнута
-    if (!rewardGiven) {
-      rewardGiven = true;
-      toggleModal('reward', true);
-    }
+  if (total >= 1000 && !rewardGiven) {
+    bar.style.background = "#4caf50";
+    rewardGiven = true;
+    toggleModal('reward', true);
   } else {
-    bar.style.background = "#d81b60"; // обычный цвет до 1000
+    bar.style.background = "#d81b60";
   }
 });
+
 
 
     onChildAdded(ref(db, "history"), snap => {
