@@ -219,6 +219,7 @@
     const db = getDatabase(app);
     const tg = Telegram.WebApp;
     tg.ready();
+    tg.expand();
 
     const me = tg.initDataUnsafe?.user || {};
     const myId = me.id || "unknown";
