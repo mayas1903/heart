@@ -145,7 +145,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set, increment, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, increment, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -170,20 +170,30 @@
     document.getElementById("myName").textContent = myName;
     document.getElementById("myAvatar").src = myAvatar;
 
-    set(ref(db, `users/${myId}/meta`), {
+    const userMeta = {
       name: myName,
       avatar: myAvatar,
       ts: Date.now()
-    });
+    };
+    set(ref(db, `users/${myId}/meta`), userMeta);
+    set(ref(db, `online/${myId}`), Date.now());
 
     onValue(ref(db, "users"), snap => {
       const users = snap.val() || {};
+      let newest = null;
+
       Object.entries(users).forEach(([uid, user]) => {
         if (uid !== myId && user.meta) {
-          document.getElementById("friendName").textContent = user.meta.name;
-          document.getElementById("friendAvatar").src = user.meta.avatar;
+          if (!newest || (user.meta.ts > newest.meta.ts)) {
+            newest = user;
+          }
         }
       });
+
+      if (newest) {
+        document.getElementById("friendName").textContent = newest.meta.name;
+        document.getElementById("friendAvatar").src = newest.meta.avatar;
+      }
     });
 
     onValue(ref(db, "counter"), snap => {
@@ -233,6 +243,7 @@
         avatar: myAvatar,
         ts: Date.now()
       });
+      set(ref(db, `online/${myId}`), Date.now());
     });
   </script>
 </head>
