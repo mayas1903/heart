@@ -149,32 +149,40 @@
     const meta = { name: myName, avatar: myAvatar, ts: Date.now() };
     set(ref(db, `users/${myId}`), meta);
 
+    let friendId = null;
+
     onValue(ref(db, "users"), snap => {
       const all = snap.val() || {};
       const entries = Object.entries(all).filter(([id]) => id !== String(myId));
       const [fid, f] = entries[0] || [];
+      if (!fid) return;
+      friendId = fid;
       document.getElementById("friendName").textContent = f?.name || "";
       document.getElementById("friendAvatar").src = f?.avatar || "https://via.placeholder.com/64";
+
+      onValue(ref(db, `counter/${friendId}`), snap => {
+        document.getElementById("friendCount").textContent = `${snap.val() || 0} 🔥`;
+      });
     });
 
-    const counterRef = ref(db, "counter/total");
-    onValue(counterRef, snap => {
+    onValue(ref(db, `counter/${myId}`), snap => {
+      document.getElementById("myCount").textContent = `${snap.val() || 0} 🔥`;
+    });
+
+    onValue(ref(db, "counter/total"), snap => {
       const total = snap.val() || 0;
-      document.getElementById("myCount").textContent = `${total} 🔥`;
-      document.getElementById("friendCount").textContent = `${total} 🔥`;
       document.getElementById("progressBar").style.width = Math.min((total / 1000) * 100, 100) + "%";
     });
 
-    onValue(ref(db, "history"), snap => {
+    onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
-      log.innerHTML = "";
-      Object.values(snap.val() || {}).slice(-50).forEach(entry => {
-        const el = document.createElement("div");
-        el.className = "history-item";
-        const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        el.innerHTML = `<img src="${entry.avatar}" /><span>${entry.name} ${time} 🔥</span>`;
-        log.appendChild(el);
-      });
+      const entry = snap.val();
+      const el = document.createElement("div");
+      el.className = "history-item";
+      const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      el.innerHTML = `<img src="${entry.avatar}" /><span>${entry.name} ${time} 🔥</span>`;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
     });
 
     onChildAdded(ref(db, "fire"), snap => {
@@ -196,7 +204,8 @@
     });
 
     document.getElementById("fireBtn").addEventListener("click", () => {
-      runTransaction(ref(db, "counter/total"), current => (current || 0) + 1);
+      runTransaction(ref(db, `counter/${myId}`), val => (val || 0) + 1);
+      runTransaction(ref(db, "counter/total"), val => (val || 0) + 1);
       push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: Date.now() });
       push(ref(db, "fire"), { ts: Date.now() });
     });
