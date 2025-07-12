@@ -337,7 +337,7 @@ function claimReward() {
 
   setTimeout(() => {
     toggleModal('waiting', false);
-    
+
     const prizes = [
       'Telegram Premium на 1 месяц',
       'Telegram Premium на 3 месяца',
@@ -346,18 +346,26 @@ function claimReward() {
       '100 ⭐️ Telegram звёзд',
       '300 ⭐️ Telegram звёзд'
     ];
-    
-    const prize = prizes[Math.floor(Math.random() * prizes.length)];
-    console.log("🎲 Выбран приз:", prize); // Отладка
 
-    // Очищаем текст и вставляем новый
-    const prizeText = document.getElementById("prizeText");
-    prizeText.textContent = ""; 
-    prizeText.innerHTML = `<strong>${prize}</strong>`;
+    const prizeRef = ref(db, `prizes/${myId}`);
 
-    toggleModal('prize', true);
+    get(prizeRef).then(snapshot => {
+      let prize = snapshot.val();
+
+      if (!prize) {
+        prize = prizes[Math.floor(Math.random() * prizes.length)];
+        set(prizeRef, prize); // сохраняем в Firebase
+      }
+
+      document.getElementById("prizeText").innerHTML = `<strong>${prize}</strong>`;
+      toggleModal('prize', true);
+    }).catch(err => {
+      console.error("Ошибка получения приза:", err);
+    });
+
   }, 2500);
 }
+
 
     window.claimReward = claimReward;
 window.toggleModal = toggleModal;
