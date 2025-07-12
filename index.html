@@ -176,6 +176,12 @@
 .modal-content button:hover {
   transform: scale(1.03);
 }
+    
+#fireBtn {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  /* остальное оставь как есть */
+}
 
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -248,10 +254,14 @@ onValue(ref(db, "counter"), snap => {
   bar.style.width = percent + "%";
   label.textContent = `${total} / 1000`;
 
-  if (total >= 1000 && !rewardGiven) {
+  if (total >= 1000) {
     bar.style.background = "#4caf50";
-    rewardGiven = true;
-    toggleModal('reward', true);
+
+    // Показываем модалку, только если она не уже видна
+    if (!rewardGiven) {
+      rewardGiven = true;
+      toggleModal('reward', true);
+    }
   } else {
     bar.style.background = "#d81b60";
   }
