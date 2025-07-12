@@ -286,7 +286,7 @@ if (total >= 1000) {
   // если прогресс снова упал ниже — сбрасываем флаг
   localStorage.removeItem("seenReward");
 }
-
+});
     onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
       const entry = snap.val();
