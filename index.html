@@ -268,21 +268,24 @@ onValue(ref(db, "counter"), snap => {
   const label = document.getElementById("progressLabel");
 
   const percent = Math.min((total / 1000) * 100, 100);
-  bar.style.width = percent + "%";
-  label.textContent = `${total} / 1000`;
+bar.style.width = percent + "%";
+label.textContent = `${total} / 1000`;
 
-  if (total >= 1000) {
-    bar.style.background = "#4caf50";
+if (total >= 1000) {
+  bar.style.background = "#4caf50";
 
-    // Показываем модалку, только если она не уже видна
-    if (!rewardGiven) {
-      rewardGiven = true;
-      toggleModal('reward', true);
-    }
-  } else {
-    bar.style.background = "#d81b60";
+  const seenReward = localStorage.getItem("seenReward") === "true";
+
+  if (!seenReward) {
+    localStorage.setItem("seenReward", "true");
+    toggleModal('reward', true);
   }
-});
+} else {
+  bar.style.background = "#d81b60";
+
+  // если прогресс снова упал ниже — сбрасываем флаг
+  localStorage.removeItem("seenReward");
+}
 
     onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
