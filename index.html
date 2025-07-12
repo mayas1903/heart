@@ -233,7 +233,7 @@
     onValue(ref(db, `counter/${myId}`), snap => {
       document.getElementById("myCount").textContent = `${snap.val() || 0} 🔥`;
     });
-
+let rewardGiven = false;
 onValue(ref(db, "counter"), snap => {
   const all = snap.val() || {};
   let total = 0;
