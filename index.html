@@ -13,22 +13,26 @@
       height: 100%;
       overflow: hidden;
     }
+
     .wrapper {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       height: 100%;
       padding: 16px;
       box-sizing: border-box;
     }
+
     .row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
       max-width: 420px;
+      margin-bottom: 20px;
     }
+
     .block {
       background: white;
       border-radius: 12px;
@@ -37,6 +41,7 @@
       box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
       width: 140px;
     }
+
     .avatar {
       width: 60px;
       height: 60px;
@@ -44,15 +49,18 @@
       object-fit: cover;
       margin-bottom: 6px;
     }
+
     .big-number {
       font-size: 22px;
       font-weight: bold;
       color: #d81b60;
     }
+
     .gif {
       width: 180px;
       pointer-events: none;
     }
+
     #fireBtn {
       width: 200px;
       height: 50px;
@@ -65,22 +73,27 @@
       cursor: pointer;
       touch-action: manipulation;
       user-select: none;
-      margin: 12px auto;
+      margin-bottom: 20px;
     }
+
     .emoji {
       position: absolute;
       font-size: 32px;
       animation: fly 1.2s ease-out forwards;
       pointer-events: none;
     }
+
     @keyframes fly {
       0% { opacity: 1; transform: translate(0, 0); }
       100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
     }
+
     .progress-container {
       width: 100%;
       max-width: 420px;
+      margin-bottom: 12px;
     }
+
     .progress {
       width: 100%;
       height: 10px;
@@ -88,11 +101,13 @@
       border-radius: 5px;
       overflow: hidden;
     }
+
     .progress-bar {
       height: 100%;
       background: #d81b60;
       width: 0%;
     }
+
     .history {
       font-size: 14px;
       color: #444;
@@ -103,28 +118,15 @@
       box-sizing: border-box;
       background: rgba(255, 255, 255, 0.7);
       border-radius: 8px;
-      overflow-y: auto;
-      max-height: 140px;
-    }
-    .history-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-    .history-item img {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      object-fit: cover;
     }
   </style>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, push, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, increment, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    const app = initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
       authDomain: "firecounter-fe920.firebaseapp.com",
       databaseURL: "https://firecounter-fe920-default-rtdb.firebaseio.com",
@@ -132,97 +134,148 @@
       storageBucket: "firecounter-fe920.appspot.com",
       messagingSenderId: "505390225447",
       appId: "1:505390225447:web:af234b40c416a42e7d9602"
-    });
+    };
 
+    const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const tg = Telegram.WebApp;
-    tg.ready();
 
+    const myNameEl = document.getElementById("myName");
+    const myAvatarEl = document.getElementById("myAvatar");
+    const friendNameEl = document.getElementById("friendName");
+    const friendAvatarEl = document.getElementById("friendAvatar");
+    const myCountEl = document.getElementById("myCount");
+    const friendCountEl = document.getElementById("friendCount");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const historyLog = document.getElementById("historyLog");
+
+    const MAX_COUNT = 1000;
+    let history = [];
+
+    const tg = window.Telegram.WebApp;
+    tg.ready();
     const me = tg.initDataUnsafe?.user || {};
     const myId = me.id || "unknown";
     const myName = me.first_name || "Я";
     const myAvatar = me.photo_url || "https://via.placeholder.com/64";
 
-    document.getElementById("myName").textContent = myName;
-    document.getElementById("myAvatar").src = myAvatar;
+    myNameEl.textContent = myName;
+    myAvatarEl.src = myAvatar;
 
-    const meta = { name: myName, avatar: myAvatar, ts: Date.now() };
-    set(ref(db, `users/${myId}`), meta);
-
-    onValue(ref(db, "users"), snap => {
-      const all = snap.val() || {};
-      const entries = Object.entries(all).filter(([id]) => id !== String(myId));
-      const [fid, f] = entries[0] || [];
-      document.getElementById("friendName").textContent = f?.name || "";
-      document.getElementById("friendAvatar").src = f?.avatar || "";
+    const userPath = `users/${myId}`;
+    set(ref(db, userPath + "/meta"), {
+      name: myName,
+      avatar: myAvatar,
+      ts: Date.now()
     });
 
-    const counterRef = ref(db, "counter/total");
+    const counterRef = ref(db, "counter");
+
     onValue(counterRef, snap => {
-      const total = snap.val() || 0;
-      document.getElementById("myCount").textContent = `${total} 🔥`;
-      document.getElementById("progressBar").style.width = Math.min((total / 1000) * 100, 100) + "%";
+      const data = snap.val() || {};
+      const meVal = data[myId] || 0;
+      let total = 0;
+      let friendVal = 0;
+
+      Object.entries(data).forEach(([uid, val]) => {
+        if (uid === myId || uid === "history") return;
+        total += val;
+        friendVal = val;
+      });
+
+      myCountEl.textContent = `${meVal} 🔥`;
+      friendCountEl.textContent = `${friendVal} 🔥`;
+
+      const progress = Math.min(((meVal + friendVal) / MAX_COUNT) * 100, 100);
+      progressBar.style.width = progress + "%";
+      progressText.textContent = `${meVal + friendVal} из ${MAX_COUNT}`;
     });
 
-    onValue(ref(db, "history"), snap => {
-      const log = document.getElementById("historyLog");
-      log.innerHTML = "";
-      Object.values(snap.val() || {}).slice(-50).forEach(entry => {
-        const el = document.createElement("div");
-        el.className = "history-item";
-        const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        el.innerHTML = `<img src="${entry.avatar}" /><span>${entry.name} ${time} 🔥</span>`;
-        log.appendChild(el);
+    const metaRef = ref(db, "users");
+    onValue(metaRef, snap => {
+      const all = snap.val() || {};
+      Object.entries(all).forEach(([uid, user]) => {
+        if (uid !== myId) {
+          friendNameEl.textContent = user.name || "Друг";
+          friendAvatarEl.src = user.avatar || "https://via.placeholder.com/64";
+        }
       });
     });
 
-    onValue(ref(db, "fire"), snap => {
-      const { ts = 0 } = snap.val() || {};
-      if (!ts) return;
-      const emoji = document.createElement("div");
-      emoji.textContent = "🔥";
-      emoji.className = "emoji";
-      emoji.style.left = window.innerWidth / 2 + "px";
-      emoji.style.top = window.innerHeight / 2 + "px";
-      emoji.style.setProperty("--x", (Math.random() - 0.5) * 100 + "px");
-      emoji.style.setProperty("--y", -60 - Math.random() * 60 + "px");
-      document.body.appendChild(emoji);
-      setTimeout(() => emoji.remove(), 1200);
-    });
+    function logHistory() {
+      const histRef = ref(db, "counter/history");
+      onValue(histRef, snap => {
+        const list = snap.val() || [];
+        historyLog.innerHTML = "";
+        list.slice(-5).reverse().forEach(entry => {
+          const el = document.createElement("div");
+          el.textContent = `${entry.name}: 🔥`;
+          historyLog.appendChild(el);
+        });
+      });
+    }
+
+    logHistory();
+
+    function sendClick() {
+      const userCounterRef = ref(db, `counter/${myId}`);
+      update(ref(db, "counter"), {
+        history: [...history.slice(-4), { name: myName, ts: Date.now() }]
+      });
+      set(userCounterRef, increment(1));
+    }
 
     document.getElementById("fireBtn").addEventListener("click", () => {
-      runTransaction(ref(db, "counter/total"), current => (current || 0) + 1);
-      push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: Date.now() });
-      set(ref(db, "fire"), { ts: Date.now() });
+      const btn = document.getElementById("fireBtn");
+      const rect = btn.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      spawnEmoji(x, y);
+      sendClick();
     });
+
+    function spawnEmoji(x, y) {
+      const el = document.createElement("div");
+      el.textContent = "🔥";
+      el.className = "emoji";
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      el.style.setProperty("--x", (Math.random() - 0.5) * 100 + "px");
+      el.style.setProperty("--y", -60 - Math.random() * 60 + "px");
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
   </script>
 </head>
 <body>
   <div class="wrapper">
     <div class="row">
       <div class="block">
-        <img id="myAvatar" class="avatar" />
+        <img id="myAvatar" class="avatar" src="" />
         <h3 id="myName">Я</h3>
         <div class="big-number" id="myCount">0 🔥</div>
       </div>
       <img src="mygif.gif" class="gif" />
     </div>
+
     <div class="row">
       <img src="friendgif.gif" class="gif" />
       <div class="block">
-        <img id="friendAvatar" class="avatar" />
+        <img id="friendAvatar" class="avatar" src="" />
         <h3 id="friendName">Друг</h3>
-        <div class="big-number" id="friendCount"></div>
+        <div class="big-number" id="friendCount">0 🔥</div>
       </div>
     </div>
-    <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">
-      Отправить огонёк
-    </button>
+
+    <button id="fireBtn">Отправить огонёк</button>
+
     <div class="progress-container">
       <div class="progress">
         <div id="progressBar" class="progress-bar"></div>
       </div>
+      <div id="progressText">0 из 1000</div>
     </div>
+
     <div class="history" id="historyLog"></div>
   </div>
 </body>
