@@ -176,11 +176,28 @@
 .modal-content button:hover {
   transform: scale(1.03);
 }
-    
 #fireBtn {
-  margin-top: 8px;
-  margin-bottom: 8px;
-  /* остальное оставь как есть */
+  margin-top: 16px;
+  margin-bottom: 24px;
+  align-self: center;
+}
+.progress-container {
+  margin-bottom: 32px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #ff4081;
 }
 
   </style>
@@ -320,6 +337,7 @@ function claimReward() {
 
   setTimeout(() => {
     toggleModal('waiting', false);
+    
     const prizes = [
       'Telegram Premium на 1 месяц',
       'Telegram Premium на 3 месяца',
@@ -328,11 +346,19 @@ function claimReward() {
       '100 ⭐️ Telegram звёзд',
       '300 ⭐️ Telegram звёзд'
     ];
+    
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
-    document.getElementById("prizeText").innerHTML = `<strong>${prize}</strong>`;
+    console.log("🎲 Выбран приз:", prize); // Отладка
+
+    // Очищаем текст и вставляем новый
+    const prizeText = document.getElementById("prizeText");
+    prizeText.textContent = ""; 
+    prizeText.innerHTML = `<strong>${prize}</strong>`;
+
     toggleModal('prize', true);
   }, 2500);
 }
+
     window.claimReward = claimReward;
 window.toggleModal = toggleModal;
 
@@ -373,12 +399,14 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- Модалка Приз -->
 <div class="modal" id="prizeModal">
   <div class="modal-content">
+    <span class="modal-close" onclick="toggleModal('prize', false)">×</span>
     <img src="priz.gif" class="modal-img" />
     <h3>🎁 Вы получили:</h3>
-    <p id="prizeText"><strong>Telegram Premium на 3 месяца</strong></p>
+    <p id="prizeText"><strong></strong></p>
     <button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
   </div>
 </div>
+
 
   <div class="wrapper">
     <div class="row">
@@ -397,18 +425,22 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="big-number" id="friendCount">0 🔥</div>
       </div>
     </div>
-   <button id="resetBtn" style="
-  background: #eee; color: #555;
-  font-size: 13px;
+<button id="resetBtn" title="Обнулить" style="
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eee;
+  font-size: 24px;
+  color: #555;
   border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  margin-top: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   cursor: pointer;
-">
-  Обнулить мои клики
-</button>
+  z-index: 1001;
+">🗑</button>
+
 
     <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">
       Отправить огонёк
