@@ -2,150 +2,108 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Огонёчки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
   <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
-  height: 100%;
-  overflow: hidden;
-}
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #ffe0f0, #fff0f8);
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100dvh;
+    }
 
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 16px;
-  position: relative;
-}
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 20px 0;
+    }
 
-.block {
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
-  width: 140px;
-  position: absolute;
-}
+    .block {
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      width: 140px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+    }
 
-.me-block {
-  top: 20px;
-  left: 20px;
-}
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 6px;
+    }
 
-/* 🟣 Блок друга внизу и по центру */
-.friend-block {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
-  width: 140px;
-}
+    .gif {
+      width: 120px;
+    }
 
-/* 🟣 Гифка друга ниже блока */
-.friend-gif {
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  z-index: 1;
-  pointer-events: none;
-}
+    .big-number {
+      font-size: 22px;
+      font-weight: bold;
+      color: #d81b60;
+    }
 
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 6px;
-}
+    #fireBtn {
+      width: 180px;
+      height: 50px;
+      background: #ff69b4;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 25px;
+      box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+    }
 
-.big-number {
-  font-size: 22px;
-  font-weight: bold;
-  color: #d81b60;
-}
+    .emoji {
+      position: absolute;
+      font-size: 32px;
+      animation: fly 1.2s ease-out forwards;
+      pointer-events: none;
+    }
 
-#fireBtn {
-  width: 180px;
-  height: 50px;
-  background: #ff69b4;
-  color: white;
-  font-size: 18px;
-  border: none;
-  border-radius: 25px;
-  box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
-  cursor: pointer;
-  display: block;
-  margin: 260px auto 0;
-  touch-action: manipulation;
-  user-select: none; /* 🔒 запрет на выделение */
-}
-
-.emoji {
-  position: absolute;
-  font-size: 32px;
-  animation: fly 1.2s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes fly {
-  0% { opacity: 1; transform: translate(0, 0); }
-  100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
-}
-
-/* 🟢 Гифка “Я” остаётся в углу */
-.my-gif {
-  top: 0;
-  right: 0;
-}
+    @keyframes fly {
+      0% { opacity: 1; transform: translate(0, 0); }
+      100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Я -->
-    <div class="block me-block">
-      <img id="meAvatar" class="avatar" src="https://via.placeholder.com/64" />
-      <h3 id="meName">Я</h3>
-      <div id="meCount" class="big-number">0 🔥</div>
+  <div class="row">
+    <div class="block">
+      <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
+      <h3 id="myName">Я</h3>
+      <div class="big-number" id="myCount">0 🔥</div>
     </div>
+    <img src="mygif.gif" class="gif" />
+  </div>
 
-    <!-- Друг -->
-    <div class="block friend-block">
+  <button id="fireBtn">Отправить огонёк</button>
+
+  <div class="row">
+    <img src="friendgif.gif" class="gif" />
+    <div class="block">
       <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
       <h3 id="friendName">Друг</h3>
-      <div id="friendCount" class="big-number">0 🔥</div>
+      <div class="big-number" id="friendCount">0 🔥</div>
     </div>
-
-    <!-- Гифки -->
-    <img src="mygif.gif" class="gif-image my-gif" />
-    <img src="friendgif.gif" class="gif-image friend-gif" />
-
-    <!-- Кнопка -->
-    <button id="fireBtn">Отправить огонёк</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      get,
-      set,
-      onValue,
-      update
-    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -159,59 +117,45 @@ html, body {
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const usersRef = ref(db, "users");
+    const counterRef = ref(db, "counter");
 
-    const meNameEl = document.getElementById("meName");
-    const meAvatarEl = document.getElementById("meAvatar");
+    const myCountEl = document.getElementById("myCount");
+    const friendCountEl = document.getElementById("friendCount");
+
+    const myNameEl = document.getElementById("myName");
+    const myAvatarEl = document.getElementById("myAvatar");
     const friendNameEl = document.getElementById("friendName");
     const friendAvatarEl = document.getElementById("friendAvatar");
-    const meCountEl = document.getElementById("meCount");
-    const friendCountEl = document.getElementById("friendCount");
-    const fireBtn = document.getElementById("fireBtn");
 
     Telegram.WebApp.ready();
     const user = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myId = user.id?.toString() || "anon_" + Math.random();
     const myName = user.first_name || "Я";
     const myAvatar = user.photo_url || "https://via.placeholder.com/64";
 
-    // Обновляем в базе свои данные
-    await update(ref(db, "users/" + myId), {
-      name: myName,
-      photo_url: myAvatar,
-      count: 0 // если новый
-    });
+    myNameEl.textContent = myName;
+    myAvatarEl.src = myAvatar;
+
+    // Set friend static for demo — in real use case, use backend logic to reverse roles
+    friendNameEl.textContent = "Друг";
+    friendAvatarEl.src = "https://via.placeholder.com/64";
 
     function updateUI(data) {
-      const ids = Object.keys(data || {});
-      const others = ids.filter(id => id !== myId);
-      const myData = data[myId] || {};
-      const friendData = data[others[0]] || {};
-
-      // "Я"
-      meNameEl.textContent = "Я";
-      meAvatarEl.src = myData.photo_url || "https://via.placeholder.com/64";
-      meCountEl.textContent = `${myData.count || 0} 🔥`;
-
-      // "Друг"
-      friendNameEl.textContent = friendData.name || "Друг";
-      friendAvatarEl.src = friendData.photo_url || "https://via.placeholder.com/64";
-      friendCountEl.textContent = `${friendData.count || 0} 🔥`;
+      const me = data?.me || 0;
+      const friend = data?.friend || 0;
+      myCountEl.textContent = `${me} 🔥`;
+      friendCountEl.textContent = `${friend} 🔥`;
     }
 
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val() || {};
+    onValue(counterRef, (snapshot) => {
+      const data = snapshot.val();
       updateUI(data);
     });
 
     async function sendClick() {
-      const snapshot = await get(usersRef);
-      const data = snapshot.val() || {};
-      const current = data[myId]?.count || 0;
-
-      await update(ref(db, "users/" + myId), {
-        count: current + 1
-      });
+      const snapshot = await get(counterRef);
+      const data = snapshot.val() || { me: 0, friend: 0 };
+      data.me++;
+      await set(counterRef, data);
     }
 
     function spawnEmoji(x, y) {
@@ -228,8 +172,9 @@ html, body {
       setTimeout(() => el.remove(), 1200);
     }
 
-    fireBtn.addEventListener("click", async () => {
-      const rect = fireBtn.getBoundingClientRect();
+    const btn = document.getElementById("fireBtn");
+    btn.addEventListener("click", async () => {
+      const rect = btn.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       spawnEmoji(x, y);
