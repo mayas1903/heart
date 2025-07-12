@@ -286,22 +286,19 @@ onValue(ref(db, "counter"), snap => {
       setTimeout(() => emoji.remove(), 1200);
     });
 
-let lastTapTime = 0;
+const fireBtn = document.getElementById("fireBtn");
 
-document.getElementById("fireBtn").addEventListener("click", () => {
+fireBtn.addEventListener("touchstart", (e) => {
+  const touches = e.touches.length;
+  const increment = touches >= 2 ? 100 : 1;
+
   const now = Date.now();
-  const doubleTap = now - lastTapTime < 300;
-  lastTapTime = now;
-
-  const increment = doubleTap ? 100 : 1;
 
   runTransaction(ref(db, `counter/${myId}`), val => (val || 0) + increment);
   runTransaction(ref(db, "counter/total"), val => (val || 0) + increment);
   push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: now });
   push(ref(db, "fire"), { ts: now });
 });
-
-    let rewardGiven = false;
 
 function toggleModal(type, show = true) {
   document.getElementById(`${type}Modal`).style.display = show ? 'flex' : 'none';
