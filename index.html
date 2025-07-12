@@ -76,6 +76,10 @@
       margin-bottom: 20px;
     }
 
+    #fireBtn::selection {
+      background: transparent;
+    }
+
     .emoji {
       position: absolute;
       font-size: 32px;
@@ -145,7 +149,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set, increment, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, increment } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -186,6 +190,7 @@
         if (uid !== myId && user.meta) {
           if (!newest || (user.meta.ts > newest.meta.ts)) {
             newest = user;
+            newest.id = uid;
           }
         }
       });
@@ -212,7 +217,6 @@
 
     onValue(ref(db, "clicks"), snap => {
       const log = document.getElementById("historyLog");
-      log.innerHTML = "";
       const data = snap.val() || {};
       Object.values(data).slice(-20).forEach(entry => {
         const el = document.createElement("div");
