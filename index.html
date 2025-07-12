@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Огонёчки</title>
-
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -54,30 +52,29 @@
     }
 
     .big-number {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       color: #d81b60;
     }
 
     #fireBtn {
-      width: 80px;
-      height: 80px;
+      width: 160px;
+      height: 50px;
       background: #ff69b4;
       color: white;
-      font-size: 32px;
+      font-size: 18px;
       border: none;
-      border-radius: 50%;
+      border-radius: 25px;
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
       cursor: pointer;
-      position: relative;
-      margin: 260px auto 0;
       display: block;
-      touch-action: manipulation; /* 🔥 убирает зум */
+      margin: 260px auto 0;
+      touch-action: manipulation;
     }
 
     .emoji {
       position: absolute;
-      font-size: 24px;
+      font-size: 32px;
       animation: fly 1.2s ease-out forwards;
       pointer-events: none;
     }
@@ -100,29 +97,24 @@
 </head>
 <body>
   <div class="container">
-    <!-- Счётчик тебя -->
     <div class="block me-block">
-      <img id="myAvatar" class="avatar" src="https://via.placeholder.com/64" />
-      <h3 id="myName">Ты</h3>
+      <img id="meAvatar" class="avatar" src="https://via.placeholder.com/64" />
+      <h3 id="meName">Я</h3>
       <div id="meCount" class="big-number">0 🔥</div>
     </div>
 
-    <!-- Счётчик друга -->
     <div class="block friend-block">
       <img id="friendAvatar" class="avatar" src="https://via.placeholder.com/64" />
       <h3 id="friendName">Друг</h3>
       <div id="friendCount" class="big-number">0 🔥</div>
     </div>
 
-    <!-- Гифки -->
-    <img src="mygif.gif" class="gif-image my-gif" alt="My GIF" />
-    <img src="friendgif.gif" class="gif-image friend-gif" alt="Friend GIF" />
+    <img src="mygif.gif" class="gif-image my-gif" />
+    <img src="friendgif.gif" class="gif-image friend-gif" />
 
-    <!-- Кнопка 🔥 -->
-    <button id="fireBtn">🔥</button>
+    <button id="fireBtn">Отправить огонёк</button>
   </div>
 
-  <!-- Firebase через ES-модули -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
@@ -145,79 +137,71 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const counterRef = ref(db, "counter");
+    const counterRef = ref(db, "users");
 
-    const myNameEl = document.getElementById("myName");
-    const myAvatarEl = document.getElementById("myAvatar");
+    const myNameEl = document.getElementById("meName");
+    const myAvatarEl = document.getElementById("meAvatar");
     const friendNameEl = document.getElementById("friendName");
     const friendAvatarEl = document.getElementById("friendAvatar");
-    const meCountEl = document.getElementById("meCount");
+    const myCountEl = document.getElementById("meCount");
     const friendCountEl = document.getElementById("friendCount");
     const fireBtn = document.getElementById("fireBtn");
 
-    // Получаем данные пользователя из Telegram
     Telegram.WebApp.ready();
-    const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
-    const myName = tgUser.first_name || "Ты";
-    const myAvatar = tgUser.photo_url || "https://via.placeholder.com/64";
+    const user = Telegram.WebApp.initDataUnsafe?.user || {};
+    const myId = user.id?.toString() || "anon_" + Math.random();
+    const myName = user.first_name || "Я";
+    const myAvatar = user.photo_url || "https://via.placeholder.com/64";
 
-    // Устанавливаем свои данные
-    myNameEl.textContent = myName;
+    // Показываем свои данные
+    myNameEl.textContent = "Я";
     myAvatarEl.src = myAvatar;
 
-    // Фиксированные данные друга (можно заменить на реальные)
+    // Показываем друга (пока статично, можно сделать по ID)
     friendNameEl.textContent = "Друг";
     friendAvatarEl.src = "https://via.placeholder.com/64";
 
-    function updateUI(data) {
-      const me = data?.me || 0;
-      const friend = data?.friend || 0;
-      meCountEl.textContent = `${me} 🔥`;
-      friendCountEl.textContent = `${friend} 🔥`;
+    function updateCounts(snapshot) {
+      const data = snapshot.val() || {};
+      const meCount = data[myId] || 0;
+
+      const entries = Object.entries(data).filter(([key]) => key !== myId);
+      const friendCount = entries.length ? entries[0][1] : 0;
+
+      myCountEl.textContent = `${meCount} 🔥`;
+      friendCountEl.textContent = `${friendCount} 🔥`;
     }
 
-    // Слушаем обновления из базы
     onValue(counterRef, (snapshot) => {
-      const data = snapshot.val();
-      updateUI(data);
+      updateCounts(snapshot);
     });
 
     async function sendClick() {
       const snapshot = await get(counterRef);
-      const data = snapshot.val() || { me: 0, friend: 0 };
-
-      // Проверяем, кто жмёт
-      const isMe = true; // можно сделать динамично
-      if (isMe) {
-        data.me++;
-      } else {
-        data.friend++;
-      }
-
+      const data = snapshot.val() || {};
+      data[myId] = (data[myId] || 0) + 1;
       await set(counterRef, data);
     }
 
-    function spawnEmojis(x, y) {
-      for (let i = 0; i < 6; i++) {
-        const el = document.createElement("div");
-        el.textContent = "🔥";
-        el.className = "emoji";
-        el.style.left = x + "px";
-        el.style.top = y + "px";
-        const dx = (Math.random() - 0.5) * 120;
-        const dy = -80 - Math.random() * 100;
-        el.style.setProperty("--x", dx + "px");
-        el.style.setProperty("--y", dy + "px");
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1200);
-      }
+    function spawnEmoji(x, y) {
+      const el = document.createElement("div");
+      el.textContent = "🔥";
+      el.className = "emoji";
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      const dx = (Math.random() - 0.5) * 80;
+      const dy = -80 - Math.random() * 80;
+      el.style.setProperty("--x", dx + "px");
+      el.style.setProperty("--y", dy + "px");
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
     }
 
     fireBtn.addEventListener("click", async () => {
       const rect = fireBtn.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
-      spawnEmojis(x, y);
+      spawnEmoji(x, y);
       await sendClick();
     });
   </script>
