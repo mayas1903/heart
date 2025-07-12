@@ -119,6 +119,25 @@
       background: rgba(255, 255, 255, 0.7);
       border-radius: 8px;
     }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .history-item img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .history-item span {
+      font-size: 13px;
+      color: #333;
+    }
   </style>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -207,9 +226,17 @@
       onValue(histRef, snap => {
         const list = snap.val() || [];
         historyLog.innerHTML = "";
-        list.slice(-5).reverse().forEach(entry => {
+        const grouped = {};
+        list.forEach(entry => {
+          const minute = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const key = `${entry.name}_${minute}`;
+          if (!grouped[key]) grouped[key] = { ...entry, count: 0 };
+          grouped[key].count++;
+        });
+        Object.values(grouped).slice(-5).reverse().forEach(entry => {
           const el = document.createElement("div");
-          el.textContent = `${entry.name}: 🔥`;
+          el.className = "history-item";
+          el.innerHTML = `<img src="${entry.avatar || ''}" /> <span>${entry.name} ${new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — ${entry.count}×</span>`;
           historyLog.appendChild(el);
         });
       });
@@ -220,7 +247,7 @@
     function sendClick() {
       const userCounterRef = ref(db, `counter/${myId}`);
       update(ref(db, "counter"), {
-        history: [...history.slice(-4), { name: myName, ts: Date.now() }]
+        history: [...history.slice(-4), { name: myName, avatar: myAvatar, ts: Date.now() }]
       });
       set(userCounterRef, increment(1));
     }
