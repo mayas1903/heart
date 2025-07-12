@@ -1,129 +1,596 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
-  <title>Огонечки</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Огоньки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    html, body {margin:0; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); width:100%; height:100%; overflow:hidden;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:linear-gradient(to bottom,#ffe4f0,#ffd1dc);
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(to bottom, #ffe4f8, #ffffff);
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    .container {max-width:430px; margin:0 auto; display:flex; flex-direction:column; gap:16px; padding:12px; height:100%; box-sizing:border-box;}
-    .ducks {position:relative; flex:1;}
-    .user-block, .friend-block {position:absolute; background:rgba(255,255,255,0.8); border-radius:14px; padding:10px; width:120px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.08); z-index:2;}
-    .user-block {top:16px; left:16px;} .friend-block {bottom:16px; right:16px;}
-    .block-content {display:flex; flex-direction:column; align-items:center;}
-    .avatar {width:58px; height:58px; border-radius:50%; object-fit:cover; margin-bottom:6px;}
-    .big-number {font-size:24px; font-weight:bold; color:#ff758c; margin-top:4px;}
-    .user-duck, .friend-duck {position:absolute; height:210px; z-index:1;}
-    .user-duck {top:0; right:0;} .friend-duck {bottom:0; left:0;}
-    .btn {width:70%; align-self:center; padding:14px; font-size:16px; font-weight:bold; color:#fff; border:none;
-      background:linear-gradient(90deg,#ff758c,#ff7eb3); border-radius:28px; box-shadow:0 4px 10px rgba(255,117,140,0.3);
+
+    .container {
+      max-width: 430px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 12px;
     }
-    .progress-bar {width:100%; height:8px; background:rgba(255,255,255,0.5); border-radius:4px; overflow:hidden;}
-    .progress-fill {height:100%; width:0; transition:width .3s ease; background:linear-gradient(90deg,#ff758c,#ff7eb3);}
-    .progress-text {text-align:center; font-size:14px; color:#555; margin-bottom:4px;}
-    .history {flex:1; overflow-y:auto; margin-bottom:60px;}
-    .history-item {display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.8); border-radius:14px; padding:10px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
-    .history-item span {font-size:14px; color:#333;}
-    .history-item img {width:24px; height:24px;}
-    .duck-animation {position:absolute; font-size:32px; animation:fly 1.8s ease-out forwards; pointer-events:none; z-index:1000;}
-    @keyframes fly {0%{opacity:1;transform:translate(0,0)rotate(0deg);}100%{opacity:0;transform:translate(var(--x),var(--y))rotate(180deg);}}
+
+    .flames {
+      position: relative;
+      height: 50vh;
+    }
+
+   .user-block, .friend-block {
+      position: absolute;
+      background: white;
+      border-radius: 14px;
+      padding: 10px;
+      width: 120px;
+      min-height: 120px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      z-index: 2;
+    }
+
+    .user-block {
+      top: 20px;
+      left: 20px;
+    }
+
+    .friend-block {
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .block-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 6px;
+    }
+
+    .user-flame, .friend-flame {
+      position: absolute;
+      height: 210px;
+      z-index: 1;
+    }
+
+    .user-flame { top: 0; right: 0; }
+    .friend-flame { bottom: 0; left: 0; }
+
+    .block-content h3 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .big-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #FF69B4;
+      margin-top: 4px;
+    }
+
+    .btn {
+      width: 70%;
+      align-self: center;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #FF69B4;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 10px rgba(255, 105, 180, 0.25);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+      background-color: #EE5CA8;
+      box-shadow: 0 0 16px 4px rgba(255, 105, 180, 0.3);
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .progress-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      background-color: #fff;
+      color: #FF69B4;
+      border: 2px solid #FF69B4;
+      border-radius: 14px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #ffe4f8;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #FF69B4;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .history {
+      margin-top: 10px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .history-item img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+
+    .flame-animation {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      animation: fly 1.8s ease-out forwards;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    @keyframes fly {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) rotate(180deg);
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 16px;
+      border-radius: 20px;
+      width: auto;
+      max-width: 380px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .modal-img {
+      width: auto;
+      height: auto;
+      max-height: 140px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+    }
+    
+    .modal-content h3 {
+      font-size: 17px;
+      font-weight: 500;
+      margin: 0 0 6px;
+      line-height: 1.4;
+      color: #000;
+    }
+
+    .modal-content p {
+      font-size: 15px;
+      color: #555;
+      margin: 0 0 16px;
+      line-height: 1.4;
+    }
+
+    .modal-content button {
+      font-size: 16px;
+      font-weight: 600;
+      background-color: #FF69B4;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 24px;
+      min-width: 140px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .level-list {
+      margin-top: 10px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .hourglass {
+      font-size: 60px;
+      animation: spin 2s linear forwards;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .level-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fff0f5;
+      border-left: 5px solid #FF69B4;
+      font-size: 15px;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: initial;
+    }
+
+    .level-item.reached {
+      background: #ffe4ea;
+      border-left-color: #FF69B4;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .level-item.current {
+      background: #ffe0f7;
+      font-weight: bold;
+      color: #FF69B4;
+    }
+
+    .level-item.locked {
+      background: #fde8ef;
+      border-left-color: #ffb6c1;
+      color: #aaa;
+    }
+
+    .circle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #FF1493;
+      background-color: #fff0f5;
+      color: #FF1493;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .circle-btn:hover {
+      background-color: #FF1493;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="ducks">
-      <div class="user-block">
-        <div class="block-content">
-          <img id="myAvatar" class="avatar" alt="Мой аватар" src="avatar-placeholder.png">
-          <h3 id="myName"></h3>
-          <p class="big-number" id="myCount">0 🔥</p>
-        </div>
+<div class="container">
+  <div class="flames">
+    <div class="user-block">
+      <div class="block-content">
+        <img id="myAvatar" class="avatar" />
+        <h3 id="myName"></h3>
+        <p class="big-number" id="myCount">0 🔥</p>
       </div>
-      <div class="friend-block">
-        <div class="block-content">
-          <img id="friendAvatar" class="avatar" alt="Аватар друга" src="avatar-placeholder.png">
-          <h3 id="friendName">Друг</h3>
-          <p class="big-number" id="friendCount">0 🔥</p>
-        </div>
-      </div>
-      <!-- Используем реальные имена файлов GIF -->
-      <img id="userDuck" class="user-duck" alt="Огонечек я" src="mygif.gif">
-      <img id="friendDuck" class="friend-duck" alt="Огонечек друг" src="friendgif.gif">
     </div>
-    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-    <div class="progress-text" id="progressText">0 из 0</div>
-    <button class="btn" id="loveBtn">❤️ Скучаю по тебе</button>
-    <div class="history" id="history"></div>
+    <div class="friend-block">
+      <div class="block-content">
+        <img id="friendAvatar" class="avatar" />
+        <h3 id="friendName">Друг</h3>
+        <p class="big-number" id="friendCount">0 🔥</p>
+      </div>
+    </div>
+    <img src="mygif.gif" class="user-flame" />
+    <img src="friendgif.gif" class="friend-flame" />
   </div>
-  <script>
-    // WebSocket синхронизация
-    const socket = new WebSocket('wss://serverheart.onrender.com');
-    let role = null;
-    socket.onopen = () => socket.send(JSON.stringify({ type: 'join' }));
-    socket.onmessage = ({ data }) => {
-      const msg = JSON.parse(data);
-      if (msg.type === 'join') {
-        role = msg.role;
-        update(msg.state);
-      } else if (msg.type === 'update') {
-        update(msg.payload);
-      } else if (msg.type === 'resetDone') {
-        update({ scores: { userA: 0, userB: 0 }, history: [] });
-        alert('Прогресс обнулён');
-      }
-    };
 
-    // DOM элементы
-    const el = id => document.getElementById(id);
-    const countEl = el('myCount'), friendCountEl = el('friendCount'), fillEl = el('progressFill'), textEl = el('progressText'), histEl = el('history');
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 из 1000</div>
 
-    function update(state) {
-      const meCount = role === 'userA' ? state.scores.userA : state.scores.userB;
-      const frCount = role === 'userA' ? state.scores.userB : state.scores.userA;
-      const total = state.scores.userA + state.scores.userB;
-      countEl.textContent = `${meCount} 🔥`;
-      friendCountEl.textContent = `${frCount} 🔥`;
-      const max = Math.min((Math.floor(total/1000)+1)*1000, 10000);
-      fillEl.style.width = `${(total/max)*100}%`;
-      textEl.textContent = `${total} из ${max}`;
-      renderHistory(state.history || []);
+  <button class="btn" id="loveBtn" onclick="sendLove()">Скучаю по тебе ❤️</button>
+
+  <div class="buttons-row">
+    <button class="progress-btn" onclick="toggleModal('progress')">Прогресс</button>
+    <button class="progress-btn" onclick="toggleModal('level')" id="levelBtn">Ваш уровень: 1</button>
+    <button class="circle-btn danger-btn" onclick="resetProgress()" title="Обнулить прогресс">✂️</button>
+  </div>
+
+  <div class="history" id="history"></div>
+</div>
+
+<!-- Модалка Прогресс -->
+<div class="modal" id="progressModal">
+  <div class="modal-content">
+    <h3>Прогресс</h3>
+    <p>Всего огоньков: <span id="totalClicks">0</span></p>
+    <button onclick="toggleModal('progress')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Модалка Уровень -->
+<div class="modal" id="levelModal">
+  <div class="modal-content">
+    <h3 style="margin-bottom: 12px;">Ваш уровень</h3>
+    <div id="levelList" class="level-list"></div>
+    <button onclick="toggleModal('level')">Окей</button>
+  </div>
+</div>
+
+<!-- Модалка Награда -->
+<div class="modal" id="rewardModal">
+  <div class="modal-content">
+    <img src="flame_prize.gif" class="modal-img" />
+    <h3>🎉 Ура! Вы собрали <span id="rewardLevel">1000</span> 🔥!</h3>
+    <p>Вам доступен подарок</p>
+    <button onclick="claimReward()">Получить 🤩</button>
+  </div>
+</div>
+
+<!-- Модалка ожидания: просто ⏳ -->
+<div class="modal" id="waitingModal">
+  <div class="hourglass">⏳</div>
+</div>
+
+<!-- Модалка Приз -->
+<div class="modal" id="prizeModal">
+  <div class="modal-content">
+    <img src="prize.gif" class="modal-img" />
+    <h3>🎁 Вы получили:</h3>
+    <p id="prizeText"><strong>Telegram Premium на 3 месяца</strong></p>
+    <button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
+  </div>
+</div>
+  
+<script>
+const fixedRewards = {
+  1: "🎁 Telegram Premium на 1 месяц",
+  2: "💎 Редкий подарок",
+  3: "🌟 150 звёзд",
+  4: "🎁 Подарок-сюрприз",
+  5: "🌟 200 звёзд",
+  6: "🎁 Telegram Premium на 3 месяца",
+  7: "🎁 Подарок-сюрприз",
+  8: "🌟 300 звёзд",
+  9: "💎 Редкий подарок",
+  10: "🎁 Telegram Premium на 6 месяцев"
+};
+
+Telegram.WebApp.ready();
+Telegram.WebApp.expand();
+
+const tgUser = Telegram.WebApp.initDataUnsafe?.user || {};
+const myInfo = {
+  id: tgUser.id,
+  name: tgUser.first_name || 'Я',
+  avatar: tgUser.photo_url || 'https://via.placeholder.com/64'
+};
+
+let state = {
+  me: { name: myInfo.name, avatar: myInfo.avatar, count: 0 },
+  friend: { name: 'Друг', avatar: '', count: 0 },
+  total: 0
+};
+
+const socket = new WebSocket("wss://apple-adhesive-ticket.glitch.me");
+socket.onopen = () => socket.send(JSON.stringify({ type: 'auth', user: myInfo }));
+
+let prizeReceived = false;
+const rewardMap = {};
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.type === 'update') {
+    state = data.payload;
+    updateUI();
+    if (data.payload.history) renderHistory(data.payload.history);
+  }
+  if (data.type === 'plane' && data.from !== myInfo.id) {
+    createFlameAnimation();
+  }
+  if (data.type === 'rewardGiven') {
+    prizeReceived = true;
+    rewardMap[data.payload.level] = data.payload.reward;
+    document.getElementById('prizeText').innerHTML = `<strong>${data.payload.reward}</strong>`;
+    toggleModal('waiting');
+    toggleModal('prize');
+  }
+  if (data.type === 'resetDone') alert("Прогресс успешно обнулён!");
+};
+
+function sendLove(times = 1) {
+  for (let i = 0; i < times; i++) socket.send(JSON.stringify({ type: 'click' }));
+  socket.send(JSON.stringify({ type: 'plane', from: myInfo.id }));
+  createFlameAnimation();
+}
+
+function updateUI() {
+  document.getElementById('myName').textContent = state.me.name;
+  document.getElementById('myAvatar').src = state.me.avatar;
+  document.getElementById('myCount').textContent = `${state.me.count} 🔥`;
+  document.getElementById('friendName').textContent = state.friend.name;
+  document.getElementById('friendAvatar').src = state.friend.avatar;
+  document.getElementById('friendCount').textContent = `${state.friend.count} 🔥`;
+  document.getElementById('totalClicks').textContent = state.total;
+
+  const level = Math.floor(state.total / 1000) + 1;
+  const max = Math.min(level * 1000, 10000);
+  const percent = Math.min((state.total / max) * 100, 100);
+  document.getElementById('progressFill').style.width = `${percent}%`;
+  document.getElementById('progressText').textContent = `${state.total} из ${max}`;
+  document.getElementById('levelBtn').textContent = `Ваш уровень: ${level}`;
+
+  if (state.total > 0 && state.total % 1000 === 0 && !prizeReceived) {
+    const lvl = Math.floor(state.total / 1000);
+    const reward = fixedRewards[lvl];
+    if (reward) {
+      rewardMap[lvl] = reward;
+      document.getElementById('rewardLevel').textContent = state.total;
+      document.getElementById('prizeText').innerHTML = `<strong>${reward}</strong>`;
+      toggleModal('reward');
+      prizeReceived = true;
     }
+  }
+  if (state.total % 1000 !== 0) prizeReceived = false;
 
-    function renderHistory(arr) {
-      histEl.innerHTML = '';
-      arr.forEach(({ actor, time }) => {
-        const div = document.createElement('div'); div.className = 'history-item';
-        const img = document.createElement('img');
-        img.src = actor === 'userA' ? 'mygif.gif' : 'friendgif.gif';
-        const span = document.createElement('span'); span.textContent = `${time} ${actor}`;
-        div.append(img, span);
-        histEl.append(div);
-      });
+  const list = document.getElementById('levelList');
+
+  list.innerHTML = '';
+  const shortRewards = {
+    1: "🔥 Tg Premium на 1 месяц",
+    2: "💎 Редкий подарок",
+    3: "🌟 150 звёзд",
+    4: "🎁 Подарок-сюрприз",
+    5: "🌟 200 звёзд",
+    6: "🔥 Tg на 3 месяца",
+    7: "🎁 Подарок-сюрприз",
+    8: "🌟 300 звёзд",
+    9: "💎 Редкий подарок",
+    10: "🔥 Tg Premium на 6 месяцев"
+  };
+
+  for (let i = 1; i <= 10; i++) {
+    const item = document.createElement('div');
+    item.className = 'level-item';
+    if (i === level) item.classList.add('current');
+    else if (i < level) item.classList.add('reached');
+    else item.classList.add('locked');
+
+    const icon = document.createElement('div');
+    icon.innerHTML = `<strong>${i}k 🔥</strong>`;
+    icon.style.maxWidth = '60px';
+    icon.style.padding = '4px 6px';
+    icon.style.borderRadius = '10px';
+    icon.style.display = 'flex';
+    icon.style.alignItems = 'center';
+    icon.style.justifyContent = 'center';
+    icon.style.fontWeight = 'bold';
+    icon.style.fontSize = '12px';
+    icon.style.textAlign = 'center';
+    icon.style.border = '2px solid #FF69B4';
+    icon.style.marginRight = '10px';
+    icon.style.background = item.classList.contains('reached') ? '#ffe4ea' : '#fff';
+    icon.style.flexShrink = '0';
+
+    const text = document.createElement('div');
+    const rewardText = shortRewards[i] || "🎁 Подарок";
+    text.innerHTML = `<div style="font-size:14px; color:#555;">Приз:</div><div><strong>${rewardText}</strong></div>`;
+    text.style.whiteSpace = 'normal';
+
+    item.appendChild(icon);
+    item.appendChild(text);
+    list.appendChild(item);
+  }
+
+  renderHistory(state.history || []);
+}
+
+function renderHistory(historyList) {
+  const container = document.getElementById('history');
+  container.innerHTML = '';
+  for (let entry of historyList) {
+    const html = `
+      <div class="history-item">
+        <img src="${entry.avatar}" />
+        <div><strong>${entry.name}</strong><br><span>+${entry.amount} 🔥</span></div>
+      </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+  }
+}
+
+function createFlameAnimation() {
+  const btn = document.getElementById('loveBtn');
+  const rect = btn.getBoundingClientRect();
+
+  const flame = document.createElement('img');
+  flame.src = 'flame.gif';
+  flame.className = 'flame-animation';
+  flame.style.left = `${rect.left + rect.width / 2 - 20}px`;
+  flame.style.top = `${rect.top - 20}px`;
+
+  const dx = (Math.random() - 0.5) * 200;
+  const dy = -100 - Math.random() * 150;
+  flame.style.setProperty('--x', `${dx}px`);
+  flame.style.setProperty('--y', `${dy}px`);
+
+  document.body.appendChild(flame);
+  setTimeout(() => flame.remove(), 1800);
+}
+
+function claimReward() {
+  prizeReceived = false;
+  toggleModal('reward');
+  toggleModal('waiting');
+  const level = Math.floor(state.total / 1000);
+  const fallback = fixedRewards[level];
+  setTimeout(() => {
+    toggleModal('waiting');
+    if (!prizeReceived) {
+      document.getElementById('prizeText').innerHTML = `<strong>${fallback || '🎁 Подарок'}</strong>`;
+      toggleModal('prize');
     }
+  }, 2000);
+  socket.send(JSON.stringify({ type: 'claimReward', level }));
+}
 
-    function flyEmoji() {
-      const btn = el('loveBtn');
-      const r = btn.getBoundingClientRect();
-      const d = document.createElement('div'); d.className = 'duck-animation'; d.textContent = '🔥';
-      d.style.left = `${r.left + r.width/2 - 16}px`;
-      d.style.top = `${r.top + r.height/2 - 16}px`;
-      document.body.append(d);
-      const x = (Math.random()*200 - 100).toFixed() + 'px';
-      const y = (-Math.random()*200 - 50).toFixed() + 'px';
-      d.style.setProperty('--x', x);
-      d.style.setProperty('--y', y);
-      d.onanimationend = () => d.remove();
-    }
-
-    el('loveBtn').onclick = () => {
-      socket.send(JSON.stringify({ type: 'click', role }));
-      flyEmoji();
-    };
-  </script>
-</body>
-</html>
-
+function toggleModal(type) {
+  const idMap = { level: 'levelModal', progress: 'progressModal', reward: 'rewardModal', waiting: 'waitingModal', prize: 'prizeModal' };
+  const modal = document.getElementById(idMap[type]);
+  if (!modal) return;
+  modal.style.display =
