@@ -13,7 +13,6 @@
       height: 100%;
       overflow: hidden;
     }
-
     .wrapper {
       display: flex;
       flex-direction: column;
@@ -23,7 +22,6 @@
       padding: 16px;
       box-sizing: border-box;
     }
-
     .row {
       display: flex;
       align-items: center;
@@ -32,7 +30,6 @@
       max-width: 420px;
       margin-bottom: 20px;
     }
-
     .block {
       background: white;
       border-radius: 12px;
@@ -41,7 +38,6 @@
       box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
       width: 140px;
     }
-
     .avatar {
       width: 60px;
       height: 60px;
@@ -49,18 +45,15 @@
       object-fit: cover;
       margin-bottom: 6px;
     }
-
     .big-number {
       font-size: 22px;
       font-weight: bold;
       color: #d81b60;
     }
-
     .gif {
       width: 180px;
       pointer-events: none;
     }
-
     #fireBtn {
       width: 200px;
       height: 50px;
@@ -75,29 +68,24 @@
       user-select: none;
       margin-bottom: 20px;
     }
-
     #fireBtn::selection {
       background: transparent;
     }
-
     .emoji {
       position: absolute;
       font-size: 32px;
       animation: fly 1.2s ease-out forwards;
       pointer-events: none;
     }
-
     @keyframes fly {
       0% { opacity: 1; transform: translate(0, 0); }
       100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
     }
-
     .progress-container {
       width: 100%;
       max-width: 420px;
       margin-bottom: 12px;
     }
-
     .progress {
       width: 100%;
       height: 10px;
@@ -105,13 +93,11 @@
       border-radius: 5px;
       overflow: hidden;
     }
-
     .progress-bar {
       height: 100%;
       background: #d81b60;
       width: 0%;
     }
-
     .history {
       font-size: 14px;
       color: #444;
@@ -125,21 +111,18 @@
       overflow-y: auto;
       max-height: 120px;
     }
-
     .history-item {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 4px;
     }
-
     .history-item img {
       width: 24px;
       height: 24px;
       border-radius: 50%;
       object-fit: cover;
     }
-
     .history-item span {
       font-size: 13px;
       color: #333;
@@ -174,30 +157,26 @@
     document.getElementById("myName").textContent = myName;
     document.getElementById("myAvatar").src = myAvatar;
 
-    const userMeta = {
-      name: myName,
-      avatar: myAvatar,
-      ts: Date.now()
-    };
+    const userMeta = { name: myName, avatar: myAvatar, ts: Date.now() };
     set(ref(db, `users/${myId}/meta`), userMeta);
     set(ref(db, `online/${myId}`), Date.now());
 
     onValue(ref(db, "users"), snap => {
       const users = snap.val() || {};
-      let newest = null;
-
+      let friend = null;
       Object.entries(users).forEach(([uid, user]) => {
         if (uid !== myId && user.meta) {
-          if (!newest || (user.meta.ts > newest.meta.ts)) {
-            newest = user;
-            newest.id = uid;
-          }
+          friend = user;
+          friend.id = uid;
         }
       });
 
-      if (newest) {
-        document.getElementById("friendName").textContent = newest.meta.name;
-        document.getElementById("friendAvatar").src = newest.meta.avatar;
+      if (friend) {
+        document.getElementById("friendName").textContent = friend.meta.name;
+        document.getElementById("friendAvatar").src = friend.meta.avatar;
+      } else {
+        document.getElementById("friendName").textContent = "";
+        document.getElementById("friendAvatar").src = "";
       }
     });
 
@@ -217,6 +196,7 @@
 
     onValue(ref(db, "clicks"), snap => {
       const log = document.getElementById("historyLog");
+      log.innerHTML = "";
       const data = snap.val() || {};
       Object.values(data).slice(-20).forEach(entry => {
         const el = document.createElement("div");
@@ -240,13 +220,8 @@
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 1200);
 
-      const userCounterRef = ref(db, `counter/${myId}`);
-      set(userCounterRef, increment(1));
-      push(ref(db, "clicks"), {
-        name: myName,
-        avatar: myAvatar,
-        ts: Date.now()
-      });
+      set(ref(db, `counter/${myId}`), increment(1));
+      push(ref(db, "clicks"), { name: myName, avatar: myAvatar, ts: Date.now() });
       set(ref(db, `online/${myId}`), Date.now());
     });
   </script>
@@ -271,7 +246,9 @@
       </div>
     </div>
 
-    <button id="fireBtn">Отправить огонёк</button>
+    <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">
+      Отправить огонёк
+    </button>
 
     <div class="progress-container">
       <div class="progress">
