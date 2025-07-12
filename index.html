@@ -118,6 +118,8 @@
       box-sizing: border-box;
       background: rgba(255, 255, 255, 0.7);
       border-radius: 8px;
+      overflow-y: auto;
+      max-height: 120px;
     }
 
     .history-item {
@@ -143,7 +145,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, increment, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, increment, update } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
@@ -158,19 +160,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const myNameEl = document.getElementById("myName");
-    const myAvatarEl = document.getElementById("myAvatar");
-    const friendNameEl = document.getElementById("friendName");
-    const friendAvatarEl = document.getElementById("friendAvatar");
-    const myCountEl = document.getElementById("myCount");
-    const friendCountEl = document.getElementById("friendCount");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
-    const historyLog = document.getElementById("historyLog");
-
-    const MAX_COUNT = 1000;
-    let history = [];
-
     const tg = window.Telegram.WebApp;
     tg.ready();
     const me = tg.initDataUnsafe?.user || {};
@@ -178,100 +167,73 @@
     const myName = me.first_name || "Я";
     const myAvatar = me.photo_url || "https://via.placeholder.com/64";
 
-    myNameEl.textContent = myName;
-    myAvatarEl.src = myAvatar;
+    document.getElementById("myName").textContent = myName;
+    document.getElementById("myAvatar").src = myAvatar;
 
-    const userPath = `users/${myId}`;
-    set(ref(db, userPath + "/meta"), {
+    set(ref(db, `users/${myId}/meta`), {
       name: myName,
       avatar: myAvatar,
       ts: Date.now()
     });
 
-    const counterRef = ref(db, "counter");
-
-    onValue(counterRef, snap => {
-      const data = snap.val() || {};
-      const meVal = data[myId] || 0;
-      let total = 0;
-      let friendVal = 0;
-
-      Object.entries(data).forEach(([uid, val]) => {
-        if (uid === myId || uid === "history") return;
-        total += val;
-        friendVal = val;
-      });
-
-      myCountEl.textContent = `${meVal} 🔥`;
-      friendCountEl.textContent = `${friendVal} 🔥`;
-
-      const progress = Math.min(((meVal + friendVal) / MAX_COUNT) * 100, 100);
-      progressBar.style.width = progress + "%";
-      progressText.textContent = `${meVal + friendVal} из ${MAX_COUNT}`;
-    });
-
-    const metaRef = ref(db, "users");
-    onValue(metaRef, snap => {
-      const all = snap.val() || {};
-      Object.entries(all).forEach(([uid, user]) => {
-        if (uid !== myId) {
-          friendNameEl.textContent = user.name || "Друг";
-          friendAvatarEl.src = user.avatar || "https://via.placeholder.com/64";
+    onValue(ref(db, "users"), snap => {
+      const users = snap.val() || {};
+      Object.entries(users).forEach(([uid, user]) => {
+        if (uid !== myId && user.meta) {
+          document.getElementById("friendName").textContent = user.meta.name;
+          document.getElementById("friendAvatar").src = user.meta.avatar;
         }
       });
     });
 
-    function logHistory() {
-      const histRef = ref(db, "counter/history");
-      onValue(histRef, snap => {
-        const list = snap.val() || [];
-        historyLog.innerHTML = "";
-        const grouped = {};
-        list.forEach(entry => {
-          const minute = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const key = `${entry.name}_${minute}`;
-          if (!grouped[key]) grouped[key] = { ...entry, count: 0 };
-          grouped[key].count++;
-        });
-        Object.values(grouped).slice(-5).reverse().forEach(entry => {
-          const el = document.createElement("div");
-          el.className = "history-item";
-          el.innerHTML = `<img src="${entry.avatar || ''}" /> <span>${entry.name} ${new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — ${entry.count}×</span>`;
-          historyLog.appendChild(el);
-        });
+    onValue(ref(db, "counter"), snap => {
+      const data = snap.val() || {};
+      const meVal = data[myId] || 0;
+      let friendVal = 0;
+      Object.entries(data).forEach(([uid, val]) => {
+        if (uid !== myId) friendVal = val;
       });
-    }
-
-    logHistory();
-
-    function sendClick() {
-      const userCounterRef = ref(db, `counter/${myId}`);
-      update(ref(db, "counter"), {
-        history: [...history.slice(-4), { name: myName, avatar: myAvatar, ts: Date.now() }]
-      });
-      set(userCounterRef, increment(1));
-    }
-
-    document.getElementById("fireBtn").addEventListener("click", () => {
-      const btn = document.getElementById("fireBtn");
-      const rect = btn.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      spawnEmoji(x, y);
-      sendClick();
+      document.getElementById("myCount").textContent = `${meVal} 🔥`;
+      document.getElementById("friendCount").textContent = `${friendVal} 🔥`;
+      const total = meVal + friendVal;
+      document.getElementById("progressBar").style.width = Math.min((total / 1000) * 100, 100) + "%";
+      document.getElementById("progressText").textContent = `${total} из 1000`;
     });
 
-    function spawnEmoji(x, y) {
+    onValue(ref(db, "clicks"), snap => {
+      const log = document.getElementById("historyLog");
+      log.innerHTML = "";
+      const data = snap.val() || {};
+      Object.values(data).slice(-20).forEach(entry => {
+        const el = document.createElement("div");
+        el.className = "history-item";
+        const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        el.innerHTML = `<img src="${entry.avatar}" /><span>${entry.name} ${time} 🔥</span>`;
+        log.appendChild(el);
+      });
+    });
+
+    document.getElementById("fireBtn").addEventListener("click", () => {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2;
       const el = document.createElement("div");
-      el.textContent = "🔥";
       el.className = "emoji";
-      el.style.left = x + "px";
-      el.style.top = y + "px";
+      el.textContent = "🔥";
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
       el.style.setProperty("--x", (Math.random() - 0.5) * 100 + "px");
       el.style.setProperty("--y", -60 - Math.random() * 60 + "px");
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 1200);
-    }
+
+      const userCounterRef = ref(db, `counter/${myId}`);
+      set(userCounterRef, increment(1));
+      push(ref(db, "clicks"), {
+        name: myName,
+        avatar: myAvatar,
+        ts: Date.now()
+      });
+    });
   </script>
 </head>
 <body>
