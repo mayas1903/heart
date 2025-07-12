@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Огонёчки</title>
 
+  <!-- Стили -->
   <style>
     html, body {
       margin: 0;
@@ -16,9 +17,10 @@
     }
 
     .container {
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
       padding: 16px;
+      position: relative;
     }
 
     .block {
@@ -27,7 +29,18 @@
       padding: 10px;
       text-align: center;
       box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
-      margin-bottom: 20px;
+      width: 140px;
+      position: absolute;
+    }
+
+    .me-block {
+      top: 20px;
+      left: 20px;
+    }
+
+    .friend-block {
+      bottom: 20px;
+      right: 20px;
     }
 
     .big-number {
@@ -46,8 +59,9 @@
       border-radius: 50%;
       box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
       cursor: pointer;
+      position: relative;
+      margin: 260px auto 0;
       display: block;
-      margin: 0 auto;
     }
 
     .emoji {
@@ -61,22 +75,46 @@
       0% { opacity: 1; transform: translate(0, 0); }
       100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
     }
+
+    .gif-image {
+      position: absolute;
+      width: 180px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .my-gif {
+      top: 0;
+      right: 0;
+    }
+
+    .friend-gif {
+      bottom: 0;
+      left: 0;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="block">
+    <!-- Счётчики -->
+    <div class="block me-block">
       <h3>Ты</h3>
       <div id="meCount" class="big-number">0 🔥</div>
     </div>
-    <div class="block">
+    <div class="block friend-block">
       <h3>Друг</h3>
       <div id="friendCount" class="big-number">0 🔥</div>
     </div>
+
+    <!-- Кнопка -->
     <button id="fireBtn">🔥</button>
+
+    <!-- Гифки -->
+    <img src="mygif.gif" class="gif-image my-gif" alt="My GIF" />
+    <img src="friendgif.gif" class="gif-image friend-gif" alt="Friend GIF" />
   </div>
 
-  <!-- Firebase SDK as modules -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import {
