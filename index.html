@@ -207,11 +207,7 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
 .modal-content button:hover {
   transform: scale(1.03);
 }
-#fireBtn {
-  margin-top: 16px;
-  margin-bottom: 24px;
-  align-self: center;
-}
+
 .progress-container {
   margin-bottom: 32px;
 }
@@ -547,21 +543,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     
     <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">🔥</button>
-    
+    <div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+
 <button id="resetBtn" title="Обнулить" style="
   position: fixed;
-  bottom: 16px;
-  right: 16px;
-  width: 48px;
-  height: 48px;
+  bottom: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #eee;
-  font-size: 24px;
-  color: #555;
+  background: rgba(230, 230, 230, 0.6);
+  font-size: 18px;
+  color: #999;
   border: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: none;
   cursor: pointer;
   z-index: 1001;
+"
+
 ">🗑</button>
 <div class="daily-tasks">
   <h4>Задания за день</h4>
