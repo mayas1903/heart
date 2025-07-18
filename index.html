@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>Огонёчки</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Огонёчки</title>
+  <style>
 html, body {
   margin: 0;
   padding: 0;
@@ -17,7 +16,7 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
     .wrapper {
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
       height: 100%;
       padding: 16px;
@@ -26,7 +25,7 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
     .row {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: space-between;
       width: 100%;
       max-width: 420px;
     }
@@ -208,13 +207,9 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
 .modal-content button:hover {
   transform: scale(1.03);
 }
-#fireBtn {
-  margin-top: 16px;
-  margin-bottom: 24px;
-  align-self: center;
-}
+
 .progress-container {
-  margin-bottom: 12px;
+  margin-bottom: 32px;
 }
 
 .modal-close {
@@ -281,8 +276,8 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
 }
 
 </style>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="module">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getDatabase, ref, onValue, onChildAdded, set, push, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
@@ -334,27 +329,39 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
 let rewardGiven = false;
 onValue(ref(db, "counter"), snap => {
   const all = snap.val() || {};
-  const myValue = all[myId] || 0;
-  const friendValue = friendId ? (all[friendId] || 0) : 0;
-  const total = myValue + friendValue;
+  let total = 0;
+
+  for (const id in all) {
+    if (id !== "total") {
+      const value = all[id];
+      if (typeof value === "number") {
+        total += value;
+      }
+    }
+  }
 
   const bar = document.getElementById("progressBar");
   const label = document.getElementById("progressLabel");
 
   const percent = Math.min((total / 1000) * 100, 100);
-  bar.style.width = percent + "%";
-  label.textContent = `${total} / 1000`;
+bar.style.width = percent + "%";
+label.textContent = `${total} / 1000`;
 
-  if (total >= 1000) {
-    bar.style.background = "#4caf50";
-    if (!localStorage.getItem("seenReward")) {
-      localStorage.setItem("seenReward", "true");
-      toggleModal('reward', true);
-    }
-  } else {
-    bar.style.background = "#d81b60";
-    localStorage.removeItem("seenReward");
+if (total >= 1000) {
+  bar.style.background = "#4caf50";
+
+  const seenReward = localStorage.getItem("seenReward") === "true";
+
+  if (!seenReward) {
+    localStorage.setItem("seenReward", "true");
+    toggleModal('reward', true);
   }
+} else {
+  bar.style.background = "#d81b60";
+
+  // если прогресс снова упал ниже — сбрасываем флаг
+  localStorage.removeItem("seenReward");
+}
 });
     onChildAdded(ref(db, "history"), snap => {
       const log = document.getElementById("historyLog");
@@ -444,145 +451,175 @@ document.addEventListener("DOMContentLoaded", () => {
   </script>
 </head>
 <body>
-<!-- Модалка Награда -->
+  <!-- Модалка Награда -->
 <div class="modal" id="rewardModal">
-<div class="modal-content">
-<img class="modal-img" src="plane.gif"/>
-<h3>🎉 Ура! Вы собрали <span id="rewardLevel">1000</span> огонечков!</h3>
-<p>Вам доступен подарок</p>
-<button onclick="claimReward()">Получить 🤩</button>
+  <div class="modal-content">
+    <img src="plane.gif" class="modal-img" />
+    <h3>🎉 Ура! Вы собрали <span id="rewardLevel">1000</span> огонечков!</h3>
+    <p>Вам доступен подарок</p>
+    <button onclick="claimReward()">Получить 🤩</button>
 <div class="daily-tasks">
-<h4>Задания за день</h4>
-<ul>
-<li>⭕ Отправляй огоньки — до 100 в день</li>
-<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
-<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
-</ul>
+  <h4>Задания за день</h4>
+  <ul>
+    <li>⭕ Отправляй огоньки — до 100 в день</li>
+    <li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+    <li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+  </ul>
 </div>
+
 <div class="daily-warning">
   ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
 </div>
+
 <div class="level-indicator">1 уровень</div>
 <div class="progress-container">
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
 </div>
-<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+
+  </div>
 </div>
-</div>
-</div>
+
 <!-- Модалка ожидания: просто ⏳ -->
 <div class="modal" id="waitingModal">
-<div class="modal-content">
-<div class="hourglass">⏳</div>
-<p>Открываем подарок...</p>
+  <div class="modal-content">
+    <div class="hourglass">⏳</div>
+    <p>Открываем подарок...</p>
+  </div>
 </div>
-</div>
+
 <!-- Модалка Приз -->
 <div class="modal" id="prizeModal">
-<div class="modal-content">
-<span class="modal-close" onclick="toggleModal('prize', false)">×</span>
-<img class="modal-img" src="priz.gif"/>
-<h3>🎁 Вы получили:</h3>
-<p id="prizeText"><strong></strong></p>
-<button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
+  <div class="modal-content">
+    <span class="modal-close" onclick="toggleModal('prize', false)">×</span>
+    <img src="priz.gif" class="modal-img" />
+    <h3>🎁 Вы получили:</h3>
+    <p id="prizeText"><strong></strong></p>
+    <button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
 <div class="daily-tasks">
-<h4>Задания за день</h4>
-<ul>
-<li>⭕ Отправляй огоньки — до 100 в день</li>
-<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
-<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
-</ul>
+  <h4>Задания за день</h4>
+  <ul>
+    <li>⭕ Отправляй огоньки — до 100 в день</li>
+    <li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+    <li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+  </ul>
 </div>
+
 <div class="daily-warning">
   ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
 </div>
+
 <div class="level-indicator">1 уровень</div>
 <div class="progress-container">
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
 </div>
-<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+
+  </div>
 </div>
+
+
+  <div class="wrapper">
+    <div class="row">
+      <div class="block">
+        <img id="myAvatar" class="avatar" />
+        <h3 id="myName">Я</h3>
+        <div class="big-number" id="myCount">0 🔥</div>
+      </div>
+      <img src="mygif.gif" class="gif" />
+    </div>
+    <div class="row">
+      <img src="friendgif.gif" class="gif" />
+      <div class="block">
+        <img id="friendAvatar" class="avatar" />
+        <h3 id="friendName">Друг</h3>
+        <div class="big-number" id="friendCount">0 🔥</div>
+      </div>
+    </div>
+
+    
+    <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">🔥</button>
+    <div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
 </div>
-</div>
-<div class="wrapper">
-<div class="row">
-<div class="block">
-<img class="avatar" id="myAvatar"/>
-<h3 id="myName">Я</h3>
-<div class="big-number" id="myCount">0 🔥</div>
-</div>
-<img class="gif" src="mygif.gif"/>
-</div>
-<div class="row">
-<img class="gif" src="friendgif.gif"/>
-<div class="block">
-<img class="avatar" id="friendAvatar"/>
-<h3 id="friendName">Друг</h3>
-<div class="big-number" id="friendCount">0 🔥</div>
-</div>
-</div>
-<button id="fireBtn" oncontextmenu="return false;" oncopy="return false;" oncut="return false;" onpaste="return false;">🔥</button>
-<button id="resetBtn" style="
+
+<button id="resetBtn" title="Обнулить" style="
   position: fixed;
-  bottom: 16px;
-  right: 16px;
-  width: 48px;
-  height: 48px;
+  bottom: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #eee;
-  font-size: 24px;
-  color: #555;
+  background: rgba(230, 230, 230, 0.6);
+  font-size: 18px;
+  color: #999;
   border: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: none;
   cursor: pointer;
   z-index: 1001;
-" title="Обнулить">🗑</button>
-<div class="daily-tasks">
-<h4>Задания за день</h4>
-<ul>
-<li>⭕ Отправляй огоньки — до 100 в день</li>
-<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
-<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
-</ul>
-</div>
-<div class="daily-warning">
-  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
-</div>
-<div class="level-indicator">1 уровень</div>
-<div class="progress-container">
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
-<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
-</div>
-<div class="daily-tasks">
-<h4>Задания за день</h4>
-<ul>
-<li>⭕ Отправляй огоньки — до 100 в день</li>
-<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
-<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
-</ul>
-</div>
-<div class="daily-warning">
-  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
-</div>
-<div class="level-indicator">1 уровень</div>
-<div class="progress-container">
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
-<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
-</div>
-<div class="progress-container">
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
-<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
-</div>
-</div>
-<div class="history" id="historyLog"></div>
+"
 
+">🗑</button>
+<div class="daily-tasks">
+  <h4>Задания за день</h4>
+  <ul>
+    <li>⭕ Отправляй огоньки — до 100 в день</li>
+    <li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+    <li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+  </ul>
+</div>
+
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+
+
+
+<div class="daily-tasks">
+  <h4>Задания за день</h4>
+  <ul>
+    <li>⭕ Отправляй огоньки — до 100 в день</li>
+    <li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+    <li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+  </ul>
+</div>
+
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+
+<div class="progress-container">
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+    </div>
+    <div class="history" id="historyLog"></div>
+  </div>
 </body>
 </html>
