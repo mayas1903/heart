@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Огонёчки</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
+  font-family: 'Segoe UI', sans-serif;
+  height: 100%;
+  overflow: hidden;
+}
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      height: 100%;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 420px;
+    }
+    .block {
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+      width: 140px;
+    }
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 6px;
+    }
+    .big-number {
+      font-size: 22px;
+      font-weight: bold;
+      color: #d81b60;
+    }
+    .gif {
+      width: 180px;
+      pointer-events: none;
+    }
+    #fireBtn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  font-size: 36px;
+  background: #ff69b4;
+  color: white;
+  border: none;
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-glow 2s infinite ease-in-out;
+  transition: transform 0.2s ease;
+  margin: 24px auto 16px;
+}
+
+#fireBtn:hover {
+  transform: scale(1.1);
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 12px rgba(255, 105, 180, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 105, 180, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(255, 105, 180, 0.3);
+  }
+
+      height: 50px;
+      background: #ff69b4;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 25px;
+      box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      margin: 12px auto;
+    }
+    .emoji {
+      position: absolute;
+      font-size: 32px;
+      animation: fly 1.2s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes fly {
+      0% { opacity: 1; transform: translate(0, 0); }
+      100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1.4); }
+    }
+    .progress-container {
+      width: 100%;
+      max-width: 420px;
+    }
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #ffe0ef;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #d81b60;
+      width: 0%;
+    }
+    .history {
+      font-size: 14px;
+      color: #444;
+      width: 100%;
+      max-width: 420px;
+      text-align: left;
+      padding: 8px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      overflow-y: auto;
+      max-height: 140px;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .history-item img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 300px;
+  animation: pop 0.3s ease;
+}
+
+.modal-img {
+  width: 120px;
+  margin-bottom: 12px;
+}
+
+.hourglass {
+  font-size: 48px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+    .modal-content button {
+  margin-top: 16px;
+  background: #ff4081;
+  color: white;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 24px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(255, 64, 129, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.modal-content button:hover {
+  transform: scale(1.03);
+}
+#fireBtn {
+  margin-top: 16px;
+  margin-bottom: 24px;
+  align-self: center;
+}
+.progress-container {
+  margin-bottom: 12px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #ff4081;
+}
+
+  
+.daily-tasks {
+  background: rgba(255, 255, 255, 0.9);
+ padding: 8px 12px;
+  font-size: 13px;
+  font-size: 15px;
+  color: #444;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+  margin: 8px auto 12px;
+  box-sizing: border-box;
+}
+
+.daily-tasks h4 {
+  margin-bottom: 8px;
+  color: #d81b60;
+  font-weight: bold;
+}
+
+.daily-tasks ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.daily-tasks li {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.daily-warning {
+  font-size: 12px;
+  margin: 6px auto 16px;
+  color: #888;
+  text-align: center;
+  max-width: 360px;
+}
+
+.level-indicator {
+  text-align: center;
+  font-weight: bold;
+  color: #d81b60;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getDatabase, ref, onValue, onChildAdded, set, push, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyAykQjVSfJdEwDIpuBpX3_CGZ8qF28wEjg",
+      authDomain: "firecounter-fe920.firebaseapp.com",
+      databaseURL: "https://firecounter-fe920-default-rtdb.firebaseio.com",
+      projectId: "firecounter-fe920",
+      storageBucket: "firecounter-fe920.appspot.com",
+      messagingSenderId: "505390225447",
+      appId: "1:505390225447:web:af234b40c416a42e7d9602"
+    });
+
+    const db = getDatabase(app);
+    const tg = Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    const me = tg.initDataUnsafe?.user || {};
+    const myId = me.id || "unknown";
+    const myName = me.first_name || "Я";
+    const myAvatar = me.photo_url || "https://via.placeholder.com/64";
+
+    document.getElementById("myName").textContent = myName;
+    document.getElementById("myAvatar").src = myAvatar;
+
+    const meta = { name: myName, avatar: myAvatar, ts: Date.now() };
+    set(ref(db, `users/${myId}`), meta);
+
+    let friendId = null;
+
+    onValue(ref(db, "users"), snap => {
+      const all = snap.val() || {};
+      const entries = Object.entries(all).filter(([id]) => id !== String(myId));
+      const [fid, f] = entries[0] || [];
+      if (!fid) return;
+      friendId = fid;
+      document.getElementById("friendName").textContent = f?.name || "";
+      document.getElementById("friendAvatar").src = f?.avatar || "https://via.placeholder.com/64";
+
+      onValue(ref(db, `counter/${friendId}`), snap => {
+        document.getElementById("friendCount").textContent = `${snap.val() || 0} 🔥`;
+      });
+    });
+
+    onValue(ref(db, `counter/${myId}`), snap => {
+      document.getElementById("myCount").textContent = `${snap.val() || 0} 🔥`;
+    });
+let rewardGiven = false;
+onValue(ref(db, "counter"), snap => {
+  const all = snap.val() || {};
+  const myValue = all[myId] || 0;
+  const friendValue = friendId ? (all[friendId] || 0) : 0;
+  const total = myValue + friendValue;
+
+  const bar = document.getElementById("progressBar");
+  const label = document.getElementById("progressLabel");
+
+  const percent = Math.min((total / 1000) * 100, 100);
+  bar.style.width = percent + "%";
+  label.textContent = `${total} / 1000`;
+
+  if (total >= 1000) {
+    bar.style.background = "#4caf50";
+    if (!localStorage.getItem("seenReward")) {
+      localStorage.setItem("seenReward", "true");
+      toggleModal('reward', true);
+    }
+  } else {
+    bar.style.background = "#d81b60";
+    localStorage.removeItem("seenReward");
+  }
+});
+    onChildAdded(ref(db, "history"), snap => {
+      const log = document.getElementById("historyLog");
+      const entry = snap.val();
+      const el = document.createElement("div");
+      el.className = "history-item";
+      const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      el.innerHTML = `<img src="${entry.avatar}" /><span>${entry.name} ${time} 🔥</span>`;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+    });
+
+    onChildAdded(ref(db, "fire"), snap => {
+      const { ts = 0 } = snap.val() || {};
+      if (!ts) return;
+      const btn = document.getElementById("fireBtn");
+      const rect = btn.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const emoji = document.createElement("div");
+      emoji.textContent = "🔥";
+      emoji.className = "emoji";
+      emoji.style.left = x + "px";
+      emoji.style.top = y + "px";
+      emoji.style.setProperty("--x", (Math.random() - 0.5) * 100 + "px");
+      emoji.style.setProperty("--y", -60 - Math.random() * 60 + "px");
+      document.body.appendChild(emoji);
+      setTimeout(() => emoji.remove(), 1200);
+    });
+
+const fireBtn = document.getElementById("fireBtn");
+
+fireBtn.addEventListener("touchstart", (e) => {
+  const touches = e.touches.length;
+  const increment = touches >= 2 ? 100 : 1;
+
+  const now = Date.now();
+
+  runTransaction(ref(db, `counter/${myId}`), val => (val || 0) + increment);
+  runTransaction(ref(db, "counter/total"), val => (val || 0) + increment);
+  push(ref(db, "history"), { name: myName, avatar: myAvatar, ts: now });
+  push(ref(db, "fire"), { ts: now });
+});
+
+function toggleModal(type, show = true) {
+  document.getElementById(`${type}Modal`).style.display = show ? 'flex' : 'none';
+}
+
+function claimReward() {
+  toggleModal('reward', false);
+  toggleModal('waiting', true);
+
+  const prizes = [
+    'Telegram Premium на 1 месяц',
+    'Telegram Premium на 3 месяца',
+    'Подарок 💍 Кольцо',
+    'Подарок 🧸 Мишка',
+    '100 ⭐️ Telegram звёзд',
+    '300 ⭐️ Telegram звёзд'
+  ];
+
+  setTimeout(() => {
+    const prize = prizes[Math.floor(Math.random() * prizes.length)];
+    document.getElementById("prizeText").innerHTML = `<strong>${prize}</strong>`;
+    toggleModal('waiting', false);
+    toggleModal('prize', true);
+  }, 2500);
+}
+
+    window.claimReward = claimReward;
+window.toggleModal = toggleModal;
+
+// ждём загрузки DOM
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    set(ref(db, `counter/${myId}`), 0);
+    set(ref(db, "counter/total"), 0);
+    push(ref(db, "history"), {
+      name: myName,
+      avatar: myAvatar,
+      ts: Date.now(),
+      reset: true
+    });
+  });
+});
+
+  </script>
+</head>
+<body>
+<!-- Модалка Награда -->
+<div class="modal" id="rewardModal">
+<div class="modal-content">
+<img class="modal-img" src="plane.gif"/>
+<h3>🎉 Ура! Вы собрали <span id="rewardLevel">1000</span> огонечков!</h3>
+<p>Вам доступен подарок</p>
+<button onclick="claimReward()">Получить 🤩</button>
+<div class="daily-tasks">
+<h4>Задания за день</h4>
+<ul>
+<li>⭕ Отправляй огоньки — до 100 в день</li>
+<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+</ul>
+</div>
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+</div>
+</div>
+<!-- Модалка ожидания: просто ⏳ -->
+<div class="modal" id="waitingModal">
+<div class="modal-content">
+<div class="hourglass">⏳</div>
+<p>Открываем подарок...</p>
+</div>
+</div>
+<!-- Модалка Приз -->
+<div class="modal" id="prizeModal">
+<div class="modal-content">
+<span class="modal-close" onclick="toggleModal('prize', false)">×</span>
+<img class="modal-img" src="priz.gif"/>
+<h3>🎁 Вы получили:</h3>
+<p id="prizeText"><strong></strong></p>
+<button onclick="toggleModal('prize')">АКТИВИРОВАТЬ</button>
+<div class="daily-tasks">
+<h4>Задания за день</h4>
+<ul>
+<li>⭕ Отправляй огоньки — до 100 в день</li>
+<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+</ul>
+</div>
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+</div>
+</div>
+<div class="wrapper">
+<div class="row">
+<div class="block">
+<img class="avatar" id="myAvatar"/>
+<h3 id="myName">Я</h3>
+<div class="big-number" id="myCount">0 🔥</div>
+</div>
+<img class="gif" src="mygif.gif"/>
+</div>
+<div class="row">
+<img class="gif" src="friendgif.gif"/>
+<div class="block">
+<img class="avatar" id="friendAvatar"/>
+<h3 id="friendName">Друг</h3>
+<div class="big-number" id="friendCount">0 🔥</div>
+</div>
+</div>
+<button id="fireBtn" oncontextmenu="return false;" oncopy="return false;" oncut="return false;" onpaste="return false;">🔥</button>
+<button id="resetBtn" style="
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eee;
+  font-size: 24px;
+  color: #555;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 1001;
+" title="Обнулить">🗑</button>
+<div class="daily-tasks">
+<h4>Задания за день</h4>
+<ul>
+<li>⭕ Отправляй огоньки — до 100 в день</li>
+<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+</ul>
+</div>
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+<div class="daily-tasks">
+<h4>Задания за день</h4>
+<ul>
+<li>⭕ Отправляй огоньки — до 100 в день</li>
+<li>⭕ Сообщения в чате — 1 огонёк за каждое, до 100</li>
+<li>⭕ Голосовые / кружочки — 2 огонька, до 100</li>
+</ul>
+</div>
+<div class="daily-warning">
+  ⚠️ Заходи в приложение каждый день, чтобы ваш прогресс не сгорел 💨
+</div>
+<div class="level-indicator">1 уровень</div>
+<div class="progress-container">
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+<div class="progress-container">
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div id="progressLabel" style="text-align:center; font-size:14px; margin-top:4px; color:#d81b60;">0 / 1000</div>
+</div>
+</div>
+<div class="history" id="historyLog"></div>
+
+</body>
+</html>
