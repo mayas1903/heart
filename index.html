@@ -53,27 +53,26 @@ background: linear-gradient(135deg, #ff8ec4, #ffe6fb, #cba0ff);
       width: 180px;
       pointer-events: none;
     }
-    #fireBtn {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  font-size: 36px;
+  #fireBtn {
+  padding: 14px 24px;
+  border-radius: 24px;
+  font-size: 17px;
+  font-weight: bold;
   background: #ff69b4;
   color: white;
   border: none;
-  box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.4);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   animation: pulse-glow 2s infinite ease-in-out;
-  transition: transform 0.2s ease;
   margin: 24px auto 16px;
 }
 
 #fireBtn:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
+  box-shadow: 0 0 32px rgba(255, 105, 180, 0.6);
 }
+
 
 @keyframes pulse-glow {
   0% {
@@ -475,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
   </div>
 
-  <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">🔥</button>
+  <button id="fireBtn" oncopy="return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;">Отправить огонёк 🔥</button>
 
   <div class="level-indicator">1 уровень</div>
 
